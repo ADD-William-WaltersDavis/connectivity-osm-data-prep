@@ -1,4 +1,5 @@
 mod traversal_times;
+mod angles;
 
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
@@ -22,11 +23,11 @@ pub struct Edge {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 6 {
+    if args.len() != 7 {
         panic!("Call with the input path to an osm.pbf, GeoTIFF and all outpaths");
     }
 
-    run(&args[1], &args[2], &args[3], &args[4], &args[5]).unwrap();
+    run(&args[1], &args[2], &args[3], &args[4], &args[5], &args[6]).unwrap();
 }
 
 fn run(
@@ -34,12 +35,14 @@ fn run(
     tif_path: &str,
     edges_outpath: &str, 
     nodes_outpath: &str, 
-    traversal_times_outpath: &str
+    traversal_times_outpath: &str,
+    angles_outpath: &str
 ) -> Result<()> {
     let (node_mapping, ways) = scrape_osm(osm_path)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
     let graph_nodes = get_graph_nodes(node_mapping, &edges);
     let traversal_times = traversal_times::process(&edges, tif_path);
+    let angles = angles::process(&edges);
 
     println!("Writing edges output");
     write_file(edges_outpath, &edges)?;
@@ -49,6 +52,9 @@ fn run(
 
     println!("Writing traversal times output");
     write_file(traversal_times_outpath, &traversal_times)?;
+
+    println!("Writing angles output");
+    write_file(angles_outpath, &angles)?;
 
     Ok(())
 }

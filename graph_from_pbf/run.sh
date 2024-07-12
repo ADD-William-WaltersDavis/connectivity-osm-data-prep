@@ -14,4 +14,4 @@ fi
 
 mkdir -p ../tmp
 # Assume the root directory has the osm.pbf, used by many other scripts in this repo
-time cargo run --release ../input/kent-240708.osm.pbf ../input/UK-dem-50m-4326.tif ../tmp/edges.json ../tmp/nodes.json ../tmp/traversal_times.json
+time cargo run --release ../input/kent-240708.osm.pbf ../input/UK-dem-50m-4326.tif ../tmp/edges.json ../tmp/nodes.json ../tmp/traversal_times.json ../tmp/angles.json
