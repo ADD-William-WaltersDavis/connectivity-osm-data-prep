@@ -24,15 +24,19 @@ fn main() {
         panic!("Call with the input path to an osm.pbf outpaths for edges and nodes");
     }
 
-    run(&args[1], &args[2]).unwrap();
+    run(&args[1], &args[2], &args[3]).unwrap();
 }
 
-fn run(osm_path: &str, edges_outpath: &str) -> Result<()> {
+fn run(osm_path: &str, edges_outpath: &str, nodes_path: &str) -> Result<()> {
     let (node_mapping, ways) = scrape_osm(osm_path)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
+    let graph_nodes = get_graph_nodes(node_mapping, &edges);
 
     println!("Writing edges output");
     write_file(edges_outpath, &edges)?;
+
+    println!("Writing nodes output");
+    write_file(nodes_path, &graph_nodes)?;
 
     Ok(())
 }
@@ -123,6 +127,18 @@ fn split_ways_into_edges(
     }
     progress.finish();
     edges
+}
+
+fn get_graph_nodes(
+    node_mapping: HashMap<NodeID, Coord>,
+    edges: &Vec<Edge>,
+) -> HashMap<i64, Coord> { 
+    let mut graph_nodes: HashMap<i64, Coord> = HashMap::new();
+    for edge in edges {
+        graph_nodes.insert(edge.start_node, node_mapping[&NodeID(edge.start_node)]);
+        graph_nodes.insert(edge.end_node, node_mapping[&NodeID(edge.end_node)]);
+    }
+    graph_nodes
 }
 
 fn write_file<T: Serialize>(path: &str, data: T) -> Result<()> {
