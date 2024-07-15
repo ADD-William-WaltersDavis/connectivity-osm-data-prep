@@ -12,6 +12,11 @@ if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
 	gunzip ../input/UK-dem-50m-4326.tif.gz
 fi
 
+
+if [ ! -e "../input/kent-240708.osm.pbf" ]; then
+	wget http://download.geofabrik.de/europe/great-britain/england/kent-240708.osm.pbf -P ../input
+fi
+
 mkdir -p ../tmp
 # Assume the root directory has the osm.pbf, used by many other scripts in this repo
 time cargo run --release ../input/kent-240708.osm.pbf ../input/UK-dem-50m-4326.tif ../tmp/edges.json ../tmp/nodes.json ../tmp/traversal_times.json ../tmp/angles.json

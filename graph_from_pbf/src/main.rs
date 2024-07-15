@@ -26,7 +26,6 @@ fn main() {
     if args.len() != 7 {
         panic!("Call with the input path to an osm.pbf, GeoTIFF and all outpaths");
     }
-
     run(&args[1], &args[2], &args[3], &args[4], &args[5], &args[6]).unwrap();
 }
 
@@ -44,16 +43,9 @@ fn run(
     let traversal_times = traversal_times::process(&edges, tif_path);
     let angles = angles::process(&edges);
 
-    println!("Writing edges output");
     write_file(edges_outpath, &edges)?;
-
-    println!("Writing nodes output");
     write_file(nodes_outpath, &graph_nodes)?;
-
-    println!("Writing traversal times output");
     write_file(traversal_times_outpath, &traversal_times)?;
-
-    println!("Writing angles output");
     write_file(angles_outpath, &angles)?;
 
     Ok(())
@@ -160,6 +152,7 @@ fn get_graph_nodes(
 }
 
 fn write_file<T: Serialize>(path: &str, data: T) -> Result<()> {
+    println!("Writing to {path}");
     let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
     serde_json::to_writer(&mut writer, &data)?;
