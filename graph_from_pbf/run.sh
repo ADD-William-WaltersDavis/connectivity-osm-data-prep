@@ -12,7 +12,6 @@ if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
 	gunzip ../input/UK-dem-50m-4326.tif.gz
 fi
 
-
 if [ ! -e "../input/kent-240708.osm.pbf" ]; then
 	wget http://download.geofabrik.de/europe/great-britain/england/kent-240708.osm.pbf -P ../input
 fi

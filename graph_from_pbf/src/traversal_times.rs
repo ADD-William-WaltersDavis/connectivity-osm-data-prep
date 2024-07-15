@@ -60,7 +60,7 @@ fn calculate_edge_traversal_time(
         let height_diff = height2 - height1;
 
         forward_traversal_time += length / walking_speed + if height_diff > 0.0 { height_diff * naismith_constant } else { 0.0 };
-        backward_traversal_time += length / walking_speed + if height_diff < 0.0 { height_diff * naismith_constant } else { 0.0 };
+        backward_traversal_time += length / walking_speed + if height_diff < 0.0 { -height_diff * naismith_constant } else { 0.0 };
     }
     let forward: u16 = if forward_traversal_time <= 1.0 { 1 } else { forward_traversal_time.round() as u16 };
     let backward: u16 = if backward_traversal_time <= 1.0 { 1 } else { backward_traversal_time.round() as u16 };
