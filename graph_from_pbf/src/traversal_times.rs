@@ -9,7 +9,7 @@ use geo::{LineString, HaversineLength};
 use indicatif::{ProgressBar, ProgressStyle, ParallelProgressIterator};
 use rayon::prelude::*;
 
-pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (u16, u16)> {
+pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (usize, usize)> {
 
     println!("Calculating traversal times");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
@@ -19,7 +19,7 @@ pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (u16, u16)> 
     // Naismith's rule: 1 hour for every 600 m of ascent
     let naismith_constant: f32 = 6.0; // s/m of vertical ascent
 
-    let traversal_times: HashMap<usize, (u16, u16)> = edges
+    let traversal_times: HashMap<usize, (usize, usize)> = edges
         .into_par_iter()
         .progress_with(progress)
         .map(|edge| {
@@ -44,7 +44,7 @@ fn calculate_edge_traversal_time(
     elevation: &mut GeoTiffElevation<BufReader<File>>, 
     walking_speed: f32, 
     naismith_constant: f32
-) -> (u16, u16) {
+) -> (usize, usize) {
     let mut forward_traversal_time: f32 = 0.0;
     let mut backward_traversal_time: f32 = 0.0;
 
@@ -63,7 +63,7 @@ fn calculate_edge_traversal_time(
         forward_traversal_time += length / walking_speed + if height_diff > 0.0 { height_diff * naismith_constant } else { 0.0 };
         backward_traversal_time += length / walking_speed + if height_diff < 0.0 { -height_diff * naismith_constant } else { 0.0 };
     }
-    let forward: u16 = if forward_traversal_time <= 1.0 { 1 } else { forward_traversal_time.round() as u16 };
-    let backward: u16 = if backward_traversal_time <= 1.0 { 1 } else { backward_traversal_time.round() as u16 };
+    let forward: usize = if forward_traversal_time <= 1.0 { 1 } else { forward_traversal_time.round() as usize };
+    let backward: usize = if backward_traversal_time <= 1.0 { 1 } else { backward_traversal_time.round() as usize };
     (forward, backward)
 }

@@ -1,8 +1,10 @@
 mod traversal_times;
 mod angles;
+mod graph;
 
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
+use graph_from_pbf::Edge;
 
 use anyhow::Result;
 use fs_err::File;
@@ -12,30 +14,19 @@ use osm_reader::{Element, NodeID, WayID};
 use serde_json;
 use serde::Serialize;
 
-#[derive(Serialize)]
-pub struct Edge {
-    id: usize,
-    osm_id: i64,
-    start_node: i64,
-    end_node: i64,
-    linestring: LineString,
-}
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 7 {
+    if args.len() != 5 {
         panic!("Call with the input path to an osm.pbf, GeoTIFF and all outpaths");
     }
-    run(&args[1], &args[2], &args[3], &args[4], &args[5], &args[6]).unwrap();
+    run(&args[1], &args[2], &args[3], &args[4]).unwrap();
 }
 
 fn run(
     osm_path: &str, 
     tif_path: &str,
-    edges_outpath: &str, 
     nodes_outpath: &str, 
-    traversal_times_outpath: &str,
-    angles_outpath: &str
+    graph_outpath: &str, 
 ) -> Result<()> {
     let (node_mapping, ways) = scrape_osm(osm_path)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
@@ -43,10 +34,10 @@ fn run(
     let traversal_times = traversal_times::process(&edges, tif_path);
     let angles = angles::process(&edges);
 
-    write_file(edges_outpath, &edges)?;
-    write_file(nodes_outpath, &graph_nodes_lookup)?;
-    write_file(traversal_times_outpath, &traversal_times)?;
-    write_file(angles_outpath, &angles)?;
+    let (graph, nodes) = graph::process(graph_nodes_lookup, traversal_times, angles, edges);
+
+    write_file(nodes_outpath, &nodes)?;
+    write_file(graph_outpath, &graph)?;
 
     Ok(())
 }
@@ -111,7 +102,7 @@ fn split_ways_into_edges(
     for (way_id, node_ids) in ways {
         progress.inc(1);
         let mut pts = Vec::new();
-        let start_node = node_ids[0].clone();
+        let mut start_node = node_ids[0].clone();
 
         let num_nodes = node_ids.len();
         for (idx, node) in node_ids.into_iter().enumerate() {
@@ -129,7 +120,7 @@ fn split_ways_into_edges(
                     linestring: LineString::new(std::mem::take(&mut pts))
                 });
                 edge_id += 1;
-
+                start_node = node;
                 // Start the next edge
                 pts.push(node_mapping[&node]);
             }
@@ -142,9 +133,9 @@ fn split_ways_into_edges(
 fn get_graph_nodes_lookup(
     node_mapping: HashMap<NodeID, Coord>,
     edges: &Vec<Edge>,
-) -> HashMap<i64, (u32, Coord)> { 
-    let mut graph_nodes_lookup: HashMap<i64, (u32, Coord)> = HashMap::new();
-    let mut graph_node_id: u32 = 0;
+) -> HashMap<i64, (usize, Coord)> { 
+    let mut graph_nodes_lookup: HashMap<i64, (usize, Coord)> = HashMap::new();
+    let mut graph_node_id: usize = 0;
     for edge in edges {
         if !graph_nodes_lookup.contains_key(&edge.start_node) {
             graph_nodes_lookup.insert(edge.start_node, (graph_node_id, node_mapping[&NodeID(edge.start_node)]));
