@@ -1,16 +1,17 @@
 use crate::*;
 
+use std::collections::HashMap;
 use geo::{LineString, RhumbBearing};
 use indicatif::{ProgressBar, ProgressStyle, ParallelProgressIterator};
 use rayon::prelude::*;
 
-pub fn process(edges: &Vec<Edge>) -> Vec<(usize, (i32, i32))> {
+pub fn process(edges: &Vec<Edge>) -> HashMap<usize, (i32, i32)> {
 
     println!("Calculating angle from north of arrival and departure");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
 
-    let angles: Vec<(usize, (i32, i32))> = edges
+    let angles: HashMap<usize, (i32, i32)> = edges
         .into_par_iter()
         .progress_with(progress)
         .map(|edge| {

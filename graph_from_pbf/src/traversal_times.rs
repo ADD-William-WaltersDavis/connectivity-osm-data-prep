@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::io::BufReader;
+use std::collections::HashMap;
 use crate::*;
 
 use fs_err::File;
@@ -8,7 +9,7 @@ use geo::{LineString, HaversineLength};
 use indicatif::{ProgressBar, ProgressStyle, ParallelProgressIterator};
 use rayon::prelude::*;
 
-pub fn process(edges: &Vec<Edge>, tif_path: &str) -> Vec<(usize, (u16, u16))> {
+pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (u16, u16)> {
 
     println!("Calculating traversal times");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
@@ -18,7 +19,7 @@ pub fn process(edges: &Vec<Edge>, tif_path: &str) -> Vec<(usize, (u16, u16))> {
     // Naismith's rule: 1 hour for every 600 m of ascent
     let naismith_constant: f32 = 6.0; // s/m of vertical ascent
 
-    let traversal_times: Vec<(usize, (u16, u16))> = edges
+    let traversal_times: HashMap<usize, (u16, u16)> = edges
         .into_par_iter()
         .progress_with(progress)
         .map(|edge| {

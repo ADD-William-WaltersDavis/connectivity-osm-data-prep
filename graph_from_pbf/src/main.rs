@@ -39,12 +39,12 @@ fn run(
 ) -> Result<()> {
     let (node_mapping, ways) = scrape_osm(osm_path)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
-    let graph_nodes = get_graph_nodes(node_mapping, &edges);
+    let graph_nodes_lookup = get_graph_nodes_lookup(node_mapping, &edges);
     let traversal_times = traversal_times::process(&edges, tif_path);
     let angles = angles::process(&edges);
 
     write_file(edges_outpath, &edges)?;
-    write_file(nodes_outpath, &graph_nodes)?;
+    write_file(nodes_outpath, &graph_nodes_lookup)?;
     write_file(traversal_times_outpath, &traversal_times)?;
     write_file(angles_outpath, &angles)?;
 
@@ -139,16 +139,23 @@ fn split_ways_into_edges(
     edges
 }
 
-fn get_graph_nodes(
+fn get_graph_nodes_lookup(
     node_mapping: HashMap<NodeID, Coord>,
     edges: &Vec<Edge>,
-) -> HashMap<i64, Coord> { 
-    let mut graph_nodes: HashMap<i64, Coord> = HashMap::new();
+) -> HashMap<i64, (u32, Coord)> { 
+    let mut graph_nodes_lookup: HashMap<i64, (u32, Coord)> = HashMap::new();
+    let mut graph_node_id: u32 = 0;
     for edge in edges {
-        graph_nodes.insert(edge.start_node, node_mapping[&NodeID(edge.start_node)]);
-        graph_nodes.insert(edge.end_node, node_mapping[&NodeID(edge.end_node)]);
+        if !graph_nodes_lookup.contains_key(&edge.start_node) {
+            graph_nodes_lookup.insert(edge.start_node, (graph_node_id, node_mapping[&NodeID(edge.start_node)]));
+            graph_node_id += 1;
+        } 
+        if !graph_nodes_lookup.contains_key(&edge.end_node) {
+            graph_nodes_lookup.insert(edge.end_node, (graph_node_id, node_mapping[&NodeID(edge.end_node)]));
+            graph_node_id += 1;
+        }
     }
-    graph_nodes
+    graph_nodes_lookup
 }
 
 fn write_file<T: Serialize>(path: &str, data: T) -> Result<()> {
