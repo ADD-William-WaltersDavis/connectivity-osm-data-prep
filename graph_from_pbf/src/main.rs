@@ -1,18 +1,18 @@
-mod traversal_times;
 mod angles;
 mod graph;
+mod traversal_times;
 
+use graph_from_pbf::Edge;
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
-use graph_from_pbf::Edge;
 
 use anyhow::Result;
 use fs_err::File;
 use geo::{Coord, LineString};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID, WayID};
-use serde_json;
 use serde::Serialize;
+use serde_json;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -22,12 +22,7 @@ fn main() {
     run(&args[1], &args[2], &args[3], &args[4]).unwrap();
 }
 
-fn run(
-    osm_path: &str, 
-    tif_path: &str,
-    nodes_outpath: &str, 
-    graph_outpath: &str, 
-) -> Result<()> {
+fn run(osm_path: &str, tif_path: &str, nodes_outpath: &str, graph_outpath: &str) -> Result<()> {
     let (node_mapping, ways) = scrape_osm(osm_path)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
     let graph_nodes_lookup = get_graph_nodes_lookup(node_mapping, &edges);
@@ -61,9 +56,10 @@ fn scrape_osm(osm_path: &str) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec
             node_mapping.insert(id, Coord { x: lon, y: lat });
         }
         Element::Way { id, node_ids, tags } => {
-            if tags.contains_key("highway") 
+            if tags.contains_key("highway")
                 && tags.get("area") != Some(&"yes".to_string())
-                && tags.get("foot") != Some(&"no".to_string()) // select just walkable ways
+                && tags.get("foot") != Some(&"no".to_string())
+            // select just walkable ways
             {
                 if first_way {
                     nodes_progress.finish();
@@ -113,11 +109,11 @@ fn split_ways_into_edges(
                 idx == 0 || idx == num_nodes - 1 || *node_counter.get(&node).unwrap() > 1;
             if is_endpoint && pts.len() > 1 {
                 edges.push(Edge {
-                    id: edge_id, 
-                    osm_id: way_id.0, 
-                    start_node: start_node.0, 
-                    end_node: node.0, 
-                    linestring: LineString::new(std::mem::take(&mut pts))
+                    id: edge_id,
+                    osm_id: way_id.0,
+                    start_node: start_node.0,
+                    end_node: node.0,
+                    linestring: LineString::new(std::mem::take(&mut pts)),
                 });
                 edge_id += 1;
                 start_node = node;
@@ -133,16 +129,22 @@ fn split_ways_into_edges(
 fn get_graph_nodes_lookup(
     node_mapping: HashMap<NodeID, Coord>,
     edges: &Vec<Edge>,
-) -> HashMap<i64, (usize, Coord)> { 
+) -> HashMap<i64, (usize, Coord)> {
     let mut graph_nodes_lookup: HashMap<i64, (usize, Coord)> = HashMap::new();
     let mut graph_node_id: usize = 0;
     for edge in edges {
         if !graph_nodes_lookup.contains_key(&edge.start_node) {
-            graph_nodes_lookup.insert(edge.start_node, (graph_node_id, node_mapping[&NodeID(edge.start_node)]));
+            graph_nodes_lookup.insert(
+                edge.start_node,
+                (graph_node_id, node_mapping[&NodeID(edge.start_node)]),
+            );
             graph_node_id += 1;
-        } 
+        }
         if !graph_nodes_lookup.contains_key(&edge.end_node) {
-            graph_nodes_lookup.insert(edge.end_node, (graph_node_id, node_mapping[&NodeID(edge.end_node)]));
+            graph_nodes_lookup.insert(
+                edge.end_node,
+                (graph_node_id, node_mapping[&NodeID(edge.end_node)]),
+            );
             graph_node_id += 1;
         }
     }

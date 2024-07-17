@@ -1,12 +1,11 @@
 use graph_from_pbf::{Angles, Edge};
 
-use std::collections::HashMap;
 use geo::{LineString, RhumbBearing};
-use indicatif::{ProgressBar, ProgressStyle, ParallelProgressIterator};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 pub fn process(edges: &Vec<Edge>) -> HashMap<usize, Angles> {
-
     println!("Calculating angle from north of arrival and departure");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
@@ -22,9 +21,7 @@ pub fn process(edges: &Vec<Edge>) -> HashMap<usize, Angles> {
     angles
 }
 
-fn arrival_departure_angle_from_north (
-    linestring: &LineString,
-) -> Angles {
+fn arrival_departure_angle_from_north(linestring: &LineString) -> Angles {
     let first_point = linestring.points().next().unwrap();
     let second_point = linestring.points().nth(1).unwrap();
     let last_point = linestring.points().last().unwrap();

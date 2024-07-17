@@ -1,5 +1,5 @@
-use serde::Serialize;
 use geo::LineString;
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct Edge {
