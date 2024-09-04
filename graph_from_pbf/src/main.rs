@@ -59,6 +59,9 @@ fn scrape_osm(osm_path: &str) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec
             if tags.contains_key("highway")
                 && tags.get("area") != Some(&"yes".to_string())
                 && tags.get("foot") != Some(&"no".to_string())
+                && tags.get("highway") != Some(&"motorway".to_string())
+                && tags.get("highway") != Some(&"motorway_link".to_string())
+                && tags.get("maxspeed:type") != Some(&"GB:nsl_dual".to_string())
             // select just walkable ways
             {
                 if first_way {
