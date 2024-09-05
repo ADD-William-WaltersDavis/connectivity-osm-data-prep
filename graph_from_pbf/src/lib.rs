@@ -1,8 +1,8 @@
+use anyhow::Result;
+use fs_err::File;
 use geo::LineString;
 use serde::{Deserialize, Serialize};
-use anyhow::Result;
 use std::io::{BufWriter, Write};
-use fs_err::File;
 
 #[derive(Serialize)]
 pub struct Edge {
@@ -11,6 +11,8 @@ pub struct Edge {
     pub start_node: i64,
     pub end_node: i64,
     pub linestring: LineString,
+    pub forward: bool,
+    pub backward: bool,
 }
 
 #[derive(Serialize)]
@@ -25,12 +27,16 @@ pub struct Angles {
 pub struct Settings {
     pub mode: String,
     pub tag_pairs: Vec<(String, String)>,
-    pub speed: f32, // m/s
+    pub speed: f32,           // m/s
     pub ascention_speed: f32, // s/m
-    pub descent_speed: f32, // s/m
+    pub descent_speed: f32,   // s/m
 }
 
-pub fn write_json_file<T: Serialize>(file_name: String, output_directory: &str, data: T) -> Result<()> {
+pub fn write_json_file<T: Serialize>(
+    file_name: String,
+    output_directory: &str,
+    data: T,
+) -> Result<()> {
     let path = format!("{output_directory}/{file_name}.json");
     println!("Writing to {path}");
     let file = File::create(path)?;

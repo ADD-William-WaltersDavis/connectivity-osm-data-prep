@@ -18,21 +18,25 @@ pub fn process(
     let mut all_links: Vec<(usize, usize, usize, u16, u16)> = Vec::new();
     for edge in edges {
         // forward direction
-        all_links.push((
-            graph_nodes_lookup[&edge.start_node].0,
-            graph_nodes_lookup[&edge.end_node].0,
-            traversal_times[&edge.id].0,
-            angles[&edge.id].forward_departure,
-            angles[&edge.id].forward_arrival,
-        ));
+        if edge.forward {
+            all_links.push((
+                graph_nodes_lookup[&edge.start_node].0,
+                graph_nodes_lookup[&edge.end_node].0,
+                traversal_times[&edge.id].0,
+                angles[&edge.id].forward_departure,
+                angles[&edge.id].forward_arrival,
+            ));
+        }
         // backward direction
-        all_links.push((
-            graph_nodes_lookup[&edge.end_node].0,
-            graph_nodes_lookup[&edge.start_node].0,
-            traversal_times[&edge.id].1,
-            angles[&edge.id].backward_departure,
-            angles[&edge.id].backward_arrival,
-        ));
+        if edge.backward {
+            all_links.push((
+                graph_nodes_lookup[&edge.end_node].0,
+                graph_nodes_lookup[&edge.start_node].0,
+                traversal_times[&edge.id].1,
+                angles[&edge.id].backward_departure,
+                angles[&edge.id].backward_arrival,
+            ));
+        }
     }
     all_links.sort();
 
@@ -60,7 +64,13 @@ fn group_links_into_graph(
         if graph.len() <= start_node {
             graph.resize(start_node + 1, Vec::new());
         }
-        graph[start_node].push((traversal_time, end_node, departure_angle, arrival_angle, link_id));
+        graph[start_node].push((
+            traversal_time,
+            end_node,
+            departure_angle,
+            arrival_angle,
+            link_id,
+        ));
         link_id += 1;
     }
     graph

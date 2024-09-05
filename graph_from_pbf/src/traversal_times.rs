@@ -9,7 +9,11 @@ use geo::{HaversineLength, LineString};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
-pub fn process(edges: &Vec<Edge>, tif_path: &str, settings: &Settings) -> HashMap<usize, (usize, usize)> {
+pub fn process(
+    edges: &Vec<Edge>,
+    tif_path: &str,
+    settings: &Settings,
+) -> HashMap<usize, (usize, usize)> {
     println!("Calculating traversal times");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());

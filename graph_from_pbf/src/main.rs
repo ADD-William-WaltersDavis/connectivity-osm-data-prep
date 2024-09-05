@@ -2,7 +2,7 @@ mod angles;
 mod graph;
 mod traversal_times;
 
-use graph_from_pbf::{Edge, write_json_file, Settings, read_settings};
+use graph_from_pbf::{read_settings, write_json_file, Edge, Settings};
 use std::collections::HashMap;
 
 use anyhow::Result;
@@ -36,9 +36,15 @@ fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Re
     Ok(())
 }
 
-fn scrape_osm(osm_path: &str, settings: &Settings) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec<NodeID>)>)> {
+fn scrape_osm(
+    osm_path: &str,
+    settings: &Settings,
+) -> Result<(
+    HashMap<NodeID, Coord>,
+    Vec<(WayID, Vec<NodeID>, bool, bool)>,
+)> {
     let mut node_mapping: HashMap<NodeID, Coord> = HashMap::new();
-    let mut highways: Vec<(WayID, Vec<NodeID>)> = Vec::new();
+    let mut highways: Vec<(WayID, Vec<NodeID>, bool, bool)> = Vec::new();
     let mut first_way = true;
     println!("Reading {osm_path}");
     let nodes_progress = ProgressBar::new_spinner().with_style(
@@ -65,7 +71,8 @@ fn scrape_osm(osm_path: &str, settings: &Settings) -> Result<(HashMap<NodeID, Co
                     first_way = false;
                 }
                 ways_progress.inc(1);
-                highways.push((id, node_ids));
+                let (forward, backward) = oneway_access(&tags, &settings);
+                highways.push((id, node_ids, forward, backward));
             }
         }
         Element::Relation { .. } | Element::Bounds { .. } => {}
@@ -77,13 +84,13 @@ fn scrape_osm(osm_path: &str, settings: &Settings) -> Result<(HashMap<NodeID, Co
 
 fn split_ways_into_edges(
     node_mapping: &HashMap<NodeID, Coord>,
-    ways: Vec<(WayID, Vec<NodeID>)>,
+    ways: Vec<(WayID, Vec<NodeID>, bool, bool)>,
 ) -> Vec<Edge> {
     println!("Splitting ways into edges");
 
     // Count how many ways reference each node
     let mut node_counter: HashMap<NodeID, usize> = HashMap::new();
-    for (_, node_ids) in &ways {
+    for (_, node_ids, _, _) in &ways {
         for node in node_ids {
             *node_counter.entry(*node).or_insert(0) += 1;
         }
@@ -94,7 +101,7 @@ fn split_ways_into_edges(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
     let mut edges: Vec<Edge> = Vec::new();
     let mut edge_id: usize = 0;
-    for (way_id, node_ids) in ways {
+    for (way_id, node_ids, forward, backward) in ways {
         progress.inc(1);
         let mut pts = Vec::new();
         let mut start_node = node_ids[0].clone();
@@ -113,6 +120,8 @@ fn split_ways_into_edges(
                     start_node: start_node.0,
                     end_node: node.0,
                     linestring: LineString::new(std::mem::take(&mut pts)),
+                    forward: forward,
+                    backward: backward,
                 });
                 edge_id += 1;
                 start_node = node;
@@ -148,4 +157,22 @@ fn get_graph_nodes_lookup(
         }
     }
     graph_nodes_lookup
+}
+
+fn oneway_access(
+    tags: &HashMap<String, String>, 
+    settings: &Settings) -> (bool, bool) {
+        let forward = true;
+        let mut backward = true;
+        if settings.mode != "walk" {
+           if tags.get("oneway") == Some(&"yes".to_string()) {
+                backward = false;
+           }
+           if settings.mode == "cycling" {
+               if tags.get("oneway:bicycle") == Some(&"no".to_string()) {
+                backward = true;
+               }
+           }
+        }
+    (forward, backward)
 }
