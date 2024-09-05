@@ -56,11 +56,11 @@ fn group_links_into_graph(
 ) -> Vec<Vec<(usize, usize, u16, u16, u32)>> {
     let mut link_id: u32 = 0;
     let mut graph: Vec<Vec<(usize, usize, u16, u16, u32)>> = Vec::new();
-    for (start, end, traversal_time, dep, arr) in all_links {
-        if graph.len() <= start {
-            graph.resize(start + 1, Vec::new());
+    for (start_node, end_node, traversal_time, departure_angle, arrival_angle) in all_links {
+        if graph.len() <= start_node {
+            graph.resize(start_node + 1, Vec::new());
         }
-        graph[start].push((traversal_time, end, dep, arr, link_id));
+        graph[start_node].push((traversal_time, end_node, departure_angle, arrival_angle, link_id));
         link_id += 1;
     }
     graph
