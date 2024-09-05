@@ -60,7 +60,7 @@ fn group_links_into_graph(
         if graph.len() <= start {
             graph.resize(start + 1, Vec::new());
         }
-        graph[start].push((end, traversal_time, dep, arr, link_id));
+        graph[start].push((traversal_time, end, dep, arr, link_id));
         link_id += 1;
     }
     graph
