@@ -2,42 +2,41 @@ mod angles;
 mod graph;
 mod traversal_times;
 
-use graph_from_pbf::Edge;
+use graph_from_pbf::{Edge, write_json_file, Settings, read_settings};
 use std::collections::HashMap;
-use std::io::{BufWriter, Write};
 
 use anyhow::Result;
-use fs_err::File;
 use geo::{Coord, LineString};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID, WayID};
-use serde::Serialize;
-use serde_json;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 5 {
-        panic!("Call with the input path to an osm.pbf, GeoTIFF and all outpaths");
+    if args.len() != 4 {
+        panic!("Call with the input path to an osm.pbf, GeoTIFF and output directory");
     }
-    run(&args[1], &args[2], &args[3], &args[4]).unwrap();
+    run(&args[1], &args[2], &args[3], "walk").unwrap();
+    run(&args[1], &args[2], &args[3], "cycling").unwrap();
 }
 
-fn run(osm_path: &str, tif_path: &str, nodes_outpath: &str, graph_outpath: &str) -> Result<()> {
-    let (node_mapping, ways) = scrape_osm(osm_path)?;
+fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Result<()> {
+    let settings = read_settings(mode)?;
+
+    let (node_mapping, ways) = scrape_osm(osm_path, &settings)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
     let graph_nodes_lookup = get_graph_nodes_lookup(node_mapping, &edges);
-    let traversal_times = traversal_times::process(&edges, tif_path);
+    let traversal_times = traversal_times::process(&edges, tif_path, &settings);
     let angles = angles::process(&edges);
 
     let (graph, nodes) = graph::process(graph_nodes_lookup, traversal_times, angles, edges);
 
-    write_file(nodes_outpath, &nodes)?;
-    write_file(graph_outpath, &graph)?;
+    write_json_file(format!("{mode}_nodes"), output_directory, &nodes)?;
+    write_json_file(format!("{mode}_graph"), output_directory, &graph)?;
 
     Ok(())
 }
 
-fn scrape_osm(osm_path: &str) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec<NodeID>)>)> {
+fn scrape_osm(osm_path: &str, settings: &Settings) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec<NodeID>)>)> {
     let mut node_mapping: HashMap<NodeID, Coord> = HashMap::new();
     let mut highways: Vec<(WayID, Vec<NodeID>)> = Vec::new();
     let mut first_way = true;
@@ -57,13 +56,10 @@ fn scrape_osm(osm_path: &str) -> Result<(HashMap<NodeID, Coord>, Vec<(WayID, Vec
         }
         Element::Way { id, node_ids, tags } => {
             if tags.contains_key("highway")
-                && tags.get("area") != Some(&"yes".to_string())
-                && tags.get("foot") != Some(&"no".to_string())
-                && tags.get("highway") != Some(&"motorway".to_string())
-                && tags.get("highway") != Some(&"motorway_link".to_string())
-                && tags.get("maxspeed:type") != Some(&"GB:nsl_dual".to_string())
-            // select just walkable ways
+                // select just ways meeting mode criteria
+                && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
             {
+                // TODO: add oneway tag filtering here
                 if first_way {
                     nodes_progress.finish();
                     first_way = false;
@@ -152,13 +148,4 @@ fn get_graph_nodes_lookup(
         }
     }
     graph_nodes_lookup
-}
-
-fn write_file<T: Serialize>(path: &str, data: T) -> Result<()> {
-    println!("Writing to {path}");
-    let file = File::create(path)?;
-    let mut writer = BufWriter::new(file);
-    serde_json::to_writer(&mut writer, &data)?;
-    writer.flush()?;
-    Ok(())
 }

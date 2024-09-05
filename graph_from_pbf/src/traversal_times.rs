@@ -9,14 +9,10 @@ use geo::{HaversineLength, LineString};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
-pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (usize, usize)> {
+pub fn process(edges: &Vec<Edge>, tif_path: &str, settings: &Settings) -> HashMap<usize, (usize, usize)> {
     println!("Calculating traversal times");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
-
-    let walking_speed: f32 = 1.33; // m/s
-                                   // Naismith's rule: 1 hour for every 600 m of ascent
-    let naismith_constant: f32 = 6.0; // s/m of vertical ascent
 
     let traversal_times: HashMap<usize, (usize, usize)> = edges
         .into_par_iter()
@@ -29,7 +25,7 @@ pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (usize, usiz
                     *elevation = Some(GeoTiffElevation::new(BufReader::new(File::open(tif_path).unwrap())));
                 }
 
-                let traversal_time = calculate_edge_traversal_time(&edge.linestring, elevation.as_mut().unwrap(), walking_speed, naismith_constant);
+                let traversal_time = calculate_edge_traversal_time(&edge.linestring, elevation.as_mut().unwrap(), settings.speed, settings.ascention_speed);
                 (edge.id, traversal_time)
             })
         })
@@ -40,8 +36,8 @@ pub fn process(edges: &Vec<Edge>, tif_path: &str) -> HashMap<usize, (usize, usiz
 fn calculate_edge_traversal_time(
     linestring: &LineString,
     elevation: &mut GeoTiffElevation<BufReader<File>>,
-    walking_speed: f32,
-    naismith_constant: f32,
+    speed: f32,
+    ascention_speed: f32, // 6 s/m for walking to follow Naismith's rule
 ) -> (usize, usize) {
     let mut forward_traversal_time: f32 = 0.0;
     let mut backward_traversal_time: f32 = 0.0;
@@ -58,15 +54,15 @@ fn calculate_edge_traversal_time(
         let length = line.haversine_length() as f32;
         let height_diff = height2 - height1;
 
-        forward_traversal_time += length / walking_speed
+        forward_traversal_time += length / speed
             + if height_diff > 0.0 {
-                height_diff * naismith_constant
+                height_diff * ascention_speed
             } else {
                 0.0
             };
-        backward_traversal_time += length / walking_speed
+        backward_traversal_time += length / speed
             + if height_diff < 0.0 {
-                -height_diff * naismith_constant
+                -height_diff * ascention_speed
             } else {
                 0.0
             };

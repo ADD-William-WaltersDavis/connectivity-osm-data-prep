@@ -18,4 +18,4 @@ fi
 
 mkdir -p ../data
 # Assume the root directory has the osm.pbf, used by many other scripts in this repo
-time cargo run --release ../input/kent-240708.osm.pbf ../input/UK-dem-50m-4326.tif ../data/nodes.json ../data/graph.json
+time cargo run --release ../input/kent-240708.osm.pbf ../input/UK-dem-50m-4326.tif ../data
