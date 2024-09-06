@@ -1,6 +1,6 @@
 use graph_from_pbf::{Angles, Edge};
 
-use geo::{LineString, RhumbBearing};
+use geo::{LineString, RhumbBearing, Point};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -28,9 +28,14 @@ fn arrival_departure_angle_from_north(linestring: &LineString) -> Angles {
     let second_last_point = linestring.points().nth_back(1).unwrap();
 
     Angles {
-        forward_arrival: first_point.rhumb_bearing(second_point).round() as u16,
-        forward_departure: second_last_point.rhumb_bearing(last_point).round() as u16,
-        backward_arrival: last_point.rhumb_bearing(second_last_point).round() as u16,
-        backward_departure: second_point.rhumb_bearing(first_point).round() as u16,
+        forward_arrival: get_angle(&first_point, &second_point),
+        forward_departure: get_angle(&second_last_point, &last_point),
+        backward_arrival: get_angle(&last_point, &second_last_point),
+        backward_departure: get_angle(&second_point, &first_point),
     }
+}
+
+fn get_angle(a: &Point, b: &Point) -> u16 {
+    let angle_from_north = a.rhumb_bearing(*b).round() as u16;
+    angle_from_north
 }
