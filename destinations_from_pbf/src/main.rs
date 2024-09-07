@@ -1,4 +1,4 @@
-mod read;
+mod destinations;
 
 use anyhow::Result;
 use serde::Serialize;
@@ -15,7 +15,7 @@ fn main() {
 
 fn run(osm_path: &str, output_directory: &str) -> Result<()> {
 
-    let destinations = read::process(osm_path)?;
+    let destinations = destinations::process(osm_path)?;
     write_json_file("destinations".to_string(), output_directory, destinations)?;
     Ok(())
 }

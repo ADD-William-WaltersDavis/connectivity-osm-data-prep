@@ -1,26 +1,10 @@
 use crate::*;
+use destinations_from_pbf::{Destination, Geometry};
 use std::collections::HashMap;
 
 use geo::{Coord, LineString};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID, WayID};
-use serde::Serialize;
-
-
-#[derive(Serialize)]
-pub struct Destination {
-    pub id: usize,
-    pub name: String,
-    pub purpose: String,
-    pub subpurpose: String,
-    pub geometry: Geometry,
-}
-
-#[derive(Serialize)]
-pub enum Geometry {
-    Point(Coord),
-    Polygon(Vec<Coord>),
-}
 
 pub fn process(osm_path: &str,) -> Result<Vec<Destination>> {
     let destinations = scrape_osm(osm_path)?;
