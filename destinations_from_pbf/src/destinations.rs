@@ -1,10 +1,10 @@
 use crate::*;
-use destinations_from_pbf::{Destination, Geometry};
+use destinations_from_pbf::Destination;
 use std::collections::HashMap;
 
-use geo::{Coord, LineString};
+use geo::{Coord, Geometry, LineString, Point, Polygon}; 
 use indicatif::{ProgressBar, ProgressStyle};
-use osm_reader::{Element, NodeID, WayID};
+use osm_reader::{Element, NodeID};
 
 pub fn process(osm_path: &str,) -> Result<Vec<Destination>> {
     let destinations = scrape_osm(osm_path)?;
@@ -27,7 +27,8 @@ fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
     osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
         Element::Node { id, lon, lat, tags, .. } => {
             nodes_progress.inc(1);
-            node_mapping.insert(id, Coord { x: lon, y: lat });
+            let coord = Coord { x: lon, y: lat };
+            node_mapping.insert(id, coord);
             if tags.get("amenity") == Some(&"hospital".to_string()) 
                 || tags.get("amenity") == Some(&"doctors".to_string())
                 || tags.get("amenity") == Some(&"clinic".to_string())
@@ -42,8 +43,8 @@ fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
                     name: name.clone(),
                     purpose: purpose.clone(),
                     subpurpose: subpurpose.clone(),
-                    geometry: Geometry::Point(Coord { x: lon, y: lat }),
-                });
+                    geometry: Geometry::Point(Point(coord)),
+                    });
             }
         }
         Element::Way { id, node_ids, tags, ..} => {
@@ -72,7 +73,7 @@ fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
                     name: name.clone(),
                     purpose: purpose.clone(),
                     subpurpose: subpurpose.clone(),
-                    geometry: Geometry::Polygon(coords),
+                    geometry: Geometry::Polygon(Polygon::new(LineString(coords), vec![])),
                 });
             }
         }

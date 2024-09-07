@@ -1,4 +1,4 @@
-use geo::Coord;
+use geo::Geometry;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -8,10 +8,4 @@ pub struct Destination {
     pub purpose: String,
     pub subpurpose: String,
     pub geometry: Geometry,
-}
-
-#[derive(Serialize)]
-pub enum Geometry {
-    Point(Coord),
-    Polygon(Vec<Coord>),
 }
