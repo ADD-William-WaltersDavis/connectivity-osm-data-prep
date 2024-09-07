@@ -15,13 +15,6 @@ pub struct Edge {
     pub backward: bool,
 }
 
-#[derive(Serialize)]
-pub struct Angles {
-    pub forward_arrival: u16,
-    pub forward_departure: u16,
-    pub backward_arrival: u16,
-    pub backward_departure: u16,
-}
 
 #[derive(Deserialize)]
 pub struct Settings {

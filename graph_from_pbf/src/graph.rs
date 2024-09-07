@@ -1,5 +1,7 @@
 use geo::Coord;
-use graph_from_pbf::{Angles, Edge};
+use graph_from_pbf::Edge;
+use crate::angles::Angles;
+
 use std::collections::HashMap;
 
 pub fn process(

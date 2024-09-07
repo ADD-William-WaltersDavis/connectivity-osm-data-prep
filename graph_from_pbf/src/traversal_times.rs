@@ -9,7 +9,7 @@ use geo::{HaversineLength, LineString};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
-pub fn process(
+pub fn calculate(
     edges: &Vec<Edge>,
     tif_path: &str,
     settings: &Settings,

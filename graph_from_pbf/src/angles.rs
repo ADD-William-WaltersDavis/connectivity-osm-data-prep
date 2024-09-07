@@ -1,11 +1,20 @@
-use graph_from_pbf::{Angles, Edge};
+use graph_from_pbf::Edge;
 
 use geo::{LineString, RhumbBearing, Point};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use std::collections::HashMap;
+use serde::Serialize;
 
-pub fn process(edges: &Vec<Edge>) -> HashMap<usize, Angles> {
+#[derive(Serialize)]
+pub struct Angles {
+    pub forward_arrival: u16,
+    pub forward_departure: u16,
+    pub backward_arrival: u16,
+    pub backward_departure: u16,
+}
+
+pub fn calculate(edges: &Vec<Edge>) -> HashMap<usize, Angles> {
     println!("Calculating angle from north of arrival and departure");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());

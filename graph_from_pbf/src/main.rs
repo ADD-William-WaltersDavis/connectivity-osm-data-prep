@@ -20,8 +20,8 @@ fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Re
     let settings = read_settings(mode)?;
 
     let (graph_nodes_lookup, edges) = edges::process(osm_path, &settings)?;
-    let traversal_times = traversal_times::process(&edges, tif_path, &settings);
-    let angles = angles::process(&edges);
+    let traversal_times = traversal_times::calculate(&edges, tif_path, &settings);
+    let angles = angles::calculate(&edges);
     let (graph, nodes) = graph::process(graph_nodes_lookup, traversal_times, angles, edges);
 
     write_json_file(format!("{mode}_nodes"), output_directory, &nodes)?;
