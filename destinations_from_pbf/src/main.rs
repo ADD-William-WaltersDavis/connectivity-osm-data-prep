@@ -1,8 +1,8 @@
 mod destinations;
 
 use anyhow::Result;
-use serde::Serialize;
 use fs_err::File;
+use serde::Serialize;
 use std::io::{BufWriter, Write};
 
 fn main() {
@@ -14,12 +14,10 @@ fn main() {
 }
 
 fn run(osm_path: &str, output_directory: &str) -> Result<()> {
-
     let destinations = destinations::process(osm_path)?;
     write_json_file("destinations".to_string(), output_directory, destinations)?;
     Ok(())
 }
-
 
 pub fn write_json_file<T: Serialize>(
     file_name: String,

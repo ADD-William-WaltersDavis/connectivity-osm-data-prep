@@ -2,16 +2,16 @@ use crate::*;
 use destinations_from_pbf::Destination;
 use std::collections::HashMap;
 
-use geo::{Coord, Geometry, LineString, Point, Polygon}; 
+use geo::{Coord, Geometry, LineString, Point, Polygon};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID};
 
-pub fn process(osm_path: &str,) -> Result<Vec<Destination>> {
+pub fn process(osm_path: &str) -> Result<Vec<Destination>> {
     let destinations = scrape_osm(osm_path)?;
     Ok(destinations)
 }
 
-fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
+fn scrape_osm(osm_path: &str) -> Result<Vec<Destination>> {
     let mut node_mapping: HashMap<NodeID, Coord> = HashMap::new();
     let mut destinations: Vec<Destination> = Vec::new();
     let mut first_way = true;
@@ -25,11 +25,13 @@ fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
             .unwrap(),
     );
     osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
-        Element::Node { id, lon, lat, tags, .. } => {
+        Element::Node {
+            id, lon, lat, tags, ..
+        } => {
             nodes_progress.inc(1);
             let coord = Coord { x: lon, y: lat };
             node_mapping.insert(id, coord);
-            if tags.get("amenity") == Some(&"hospital".to_string()) 
+            if tags.get("amenity") == Some(&"hospital".to_string())
                 || tags.get("amenity") == Some(&"doctors".to_string())
                 || tags.get("amenity") == Some(&"clinic".to_string())
                 || tags.get("amenity") == Some(&"pharmacy".to_string())
@@ -44,11 +46,13 @@ fn scrape_osm(osm_path: &str,) -> Result<Vec<Destination>> {
                     purpose: purpose.clone(),
                     subpurpose: subpurpose.clone(),
                     geometry: Geometry::Point(Point(coord)),
-                    });
+                });
             }
         }
-        Element::Way { id, node_ids, tags, ..} => {
-            if tags.get("amenity") == Some(&"hospital".to_string()) 
+        Element::Way {
+            id, node_ids, tags, ..
+        } => {
+            if tags.get("amenity") == Some(&"hospital".to_string())
                 || tags.get("amenity") == Some(&"doctors".to_string())
                 || tags.get("amenity") == Some(&"clinic".to_string())
                 || tags.get("amenity") == Some(&"pharmacy".to_string())
