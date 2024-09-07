@@ -1,4 +1,4 @@
-use geo::Geometry;
+use geo::{Point, Geometry};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -8,4 +8,5 @@ pub struct Destination {
     pub purpose: String,
     pub subpurpose: String,
     pub geometry: Geometry,
+    pub centroid: Point,
 }

@@ -2,7 +2,7 @@ use crate::*;
 use destinations_from_pbf::Destination;
 use std::collections::HashMap;
 
-use geo::{Coord, Geometry, LineString, Point, Polygon};
+use geo::{Centroid, Coord, Geometry, LineString, Point, Polygon};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID};
 
@@ -46,6 +46,7 @@ fn scrape_osm(osm_path: &str) -> Result<Vec<Destination>> {
                     purpose: purpose.clone(),
                     subpurpose: subpurpose.clone(),
                     geometry: Geometry::Point(Point(coord)),
+                    centroid: Point(coord),
                 });
             }
         }
@@ -72,12 +73,15 @@ fn scrape_osm(osm_path: &str) -> Result<Vec<Destination>> {
                         coords.push(*coord);
                     }
                 }
+                let polygon = Polygon::new(LineString(coords), vec![]);
+                let centroid = polygon.centroid().unwrap();
                 destinations.push(Destination {
                     id: id.0 as usize,
                     name: name.clone(),
                     purpose: purpose.clone(),
                     subpurpose: subpurpose.clone(),
-                    geometry: Geometry::Polygon(Polygon::new(LineString(coords), vec![])),
+                    geometry: Geometry::Polygon(polygon),
+                    centroid: centroid,
                 });
             }
         }
