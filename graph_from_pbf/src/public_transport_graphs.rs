@@ -64,8 +64,10 @@ pub fn process(
         // add pt route nodes to pt_graph_walk
         // check if pt stop has a next node else set has_pt to false
         let mut has_pt = true;
+        let mut next_stop_node = length_before_routes + input_timetable.next_node.unwrap_or(0);
         if input_timetable.next_node.is_none() {
             has_pt = false;
+            next_stop_node = 0;
         }
         pt_graph_walk.push(NodeWalk {
             has_pt,
@@ -75,14 +77,15 @@ pub fn process(
         pt_graph_walk[pt_stop_node]
             .edges
             .push((0, length_before_routes + i));
-        // add pt
+        // add pt route node edge to next node
         pt_graph_routes.push(NodeRoute {
-            next_stop_node: length_before_routes + input_timetable.next_node.unwrap_or(0),
+            next_stop_node,
             timetable: input_timetable
                 .timetable
                 .clone()
                 .unwrap_or(Timetable(Vec::new())),
         })
     }
+    assert_eq!(pt_graph_walk.len(), pt_graph_routes.len());
     Ok((pt_graph_walk, pt_graph_routes))
 }
