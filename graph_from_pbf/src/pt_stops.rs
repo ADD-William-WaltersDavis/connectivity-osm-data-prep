@@ -1,5 +1,6 @@
 use crate::public_transport_graphs::NodeWalk;
 use geo::{Coord, HaversineDistance, Point};
+use indicatif::{ProgressBar, ProgressStyle};
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::collections::HashMap;
@@ -21,6 +22,9 @@ pub fn add_stops(
         });
     }
 
+    let progress = ProgressBar::new(pt_stops.len() as u64).with_style(ProgressStyle::with_template(
+        "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
+
     // for each pt stop find the nearest two walk nodes and add an edges
     for (id, coord) in pt_stops {
         let pt_graph_walk_id = *walk_graph_length + id;
@@ -39,15 +43,20 @@ pub fn add_stops(
                 .edges
                 .push((traversal_time as usize, pt_graph_walk_id));
         }
+        progress.inc(1);
     }
 }
 
 fn create_tree(walk_nodes: &HashMap<usize, Coord>) -> KdTree<f64, usize, [f64; 2]> {
+    println!("Creating kdtree");
+    let kdtree_progress = ProgressBar::new(walk_nodes.len() as u64).with_style(ProgressStyle::with_template(
+        "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
     let dimensions = 2;
     let mut kdtree = KdTree::new(dimensions);
 
     for (node_id, coord) in walk_nodes {
         kdtree.add([coord.x, coord.y], node_id.clone()).unwrap();
+        kdtree_progress.inc(1);
     }
     kdtree
 }
