@@ -21,6 +21,7 @@ pub fn process(
     walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>>,
     walk_nodes: HashMap<usize, Coord>,
 ) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>)> {
+    println!("Creating public transport graphs");
     let walk_graph_length = walk_graph.len();
     // for pt graph walk we ignore turning angles and linkIDs
     let mut pt_graph_walk: Vec<NodeWalk> = walk_graph
@@ -47,6 +48,7 @@ pub fn process(
 
     let timetables = read_timetables()?;
 
+    println!("Creating public transport routes graph");
     // create pt graph routes and pad with empty NodeRoutes for non-pt route nodes
     let mut pt_graph_routes: Vec<NodeRoute> = Vec::new();
     for _ in 0..pt_graph_walk.len() {

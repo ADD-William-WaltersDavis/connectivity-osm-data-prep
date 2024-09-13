@@ -10,6 +10,7 @@ pub fn add_stops(
     pt_graph_walk: &mut Vec<NodeWalk>,
     walk_graph_length: &usize,
 ) {
+    println!("Adding public transport stops to graph_walk");
     let kdtree = create_tree(&walk_nodes);
 
     // pad pt_graph_walk with empty NodeWalks for pt stops
