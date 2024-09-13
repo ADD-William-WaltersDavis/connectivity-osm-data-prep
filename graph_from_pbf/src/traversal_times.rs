@@ -30,9 +30,9 @@ pub fn calculate(
                 }
 
                 let traversal_time = calculate_edge_traversal_time(
-                    &edge.linestring, 
-                    elevation.as_mut().unwrap(), 
-                    settings.speed, 
+                    &edge.linestring,
+                    elevation.as_mut().unwrap(),
+                    settings.speed,
                     settings.ascention_speed
                 );
                 (edge.id, traversal_time)

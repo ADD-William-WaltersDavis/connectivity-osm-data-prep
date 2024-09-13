@@ -1,10 +1,10 @@
 use graph_from_pbf::Edge;
 
-use geo::{LineString, RhumbBearing, Point};
+use geo::{LineString, Point, RhumbBearing};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct Angles {

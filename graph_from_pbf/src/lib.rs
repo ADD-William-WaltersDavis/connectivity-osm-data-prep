@@ -1,6 +1,6 @@
 use anyhow::Result;
 use fs_err::File;
-use geo::LineString;
+use geo::{Coord, LineString};
 use serde::{Deserialize, Serialize};
 use std::io::{BufWriter, Write};
 
@@ -15,7 +15,6 @@ pub struct Edge {
     pub backward: bool,
 }
 
-
 #[derive(Deserialize)]
 pub struct Settings {
     pub mode: String,
@@ -24,6 +23,16 @@ pub struct Settings {
     pub ascention_speed: f32, // s/m
     pub descent_speed: f32,   // s/m
 }
+
+#[derive(Deserialize)]
+pub struct InputTimetable {
+    pub pt_stop_node: usize,
+    pub next_node: Option<usize>,
+    pub timetable: Option<Timetable>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct Timetable(pub Vec<(usize, usize)>);
 
 pub fn write_json_file<T: Serialize>(
     file_name: String,
@@ -45,4 +54,18 @@ pub fn read_settings(mode: &str) -> Result<Settings> {
     let reader = std::io::BufReader::new(file);
     let settings: Settings = serde_json::from_reader(reader)?;
     Ok(settings)
+}
+
+pub fn read_timetables() -> Result<Vec<InputTimetable>> {
+    let file = File::open("input/pt_route_timetables.json")?;
+    let reader = std::io::BufReader::new(file);
+    let timetables: Vec<InputTimetable> = serde_json::from_reader(reader)?;
+    Ok(timetables)
+}
+
+pub fn read_pt_stops() -> Result<Vec<(usize, Coord)>> {
+    let file = File::open("input/pt_stop_coordinates.json")?;
+    let reader = std::io::BufReader::new(file);
+    let pt_stops: Vec<(usize, Coord)> = serde_json::from_reader(reader)?;
+    Ok(pt_stops)
 }

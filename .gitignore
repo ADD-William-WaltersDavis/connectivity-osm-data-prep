@@ -4,3 +4,6 @@ tmp/
 target/
 data/
 testing.sh
+__pycache__/
+output/
+temp/

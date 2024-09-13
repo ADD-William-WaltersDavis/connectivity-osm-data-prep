@@ -246,6 +246,7 @@ dependencies = [
  "geo",
  "geojson",
  "indicatif",
+ "kdtree",
  "osm-reader",
  "rayon",
  "serde",
@@ -333,6 +334,15 @@ name = "jpeg-decoder"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
+
+[[package]]
+name = "kdtree"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80ee359328fc9087e9e3fc0a4567c4dd27ec69a127d6a70e8d9dd22845b8b1a2"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "lazy_static"
