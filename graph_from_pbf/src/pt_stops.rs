@@ -45,6 +45,7 @@ pub fn add_stops(
         }
         progress.inc(1);
     }
+    progress.finish();
 }
 
 fn create_tree(walk_nodes: &HashMap<usize, Coord>) -> KdTree<f64, usize, [f64; 2]> {

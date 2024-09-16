@@ -57,14 +57,14 @@ pub fn read_settings(mode: &str) -> Result<Settings> {
 }
 
 pub fn read_timetables() -> Result<Vec<InputTimetable>> {
-    let file = File::open("input/pt_route_timetables.json")?;
+    let file = File::open("../input/pt_route_timetables.json")?;
     let reader = std::io::BufReader::new(file);
     let timetables: Vec<InputTimetable> = serde_json::from_reader(reader)?;
     Ok(timetables)
 }
 
 pub fn read_pt_stops() -> Result<Vec<(usize, Coord)>> {
-    let file = File::open("input/pt_stop_coordinates.json")?;
+    let file = File::open("../input/pt_stop_coordinates.json")?;
     let reader = std::io::BufReader::new(file);
     let pt_stops: Vec<(usize, Coord)> = serde_json::from_reader(reader)?;
     Ok(pt_stops)
