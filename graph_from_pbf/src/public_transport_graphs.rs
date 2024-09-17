@@ -17,10 +17,16 @@ pub struct NodeRoute {
     pub timetable: Timetable,
 }
 
+#[derive(Serialize)]
+pub struct ReverseNodeRoute {
+    pub prev_stop_node: usize,
+    pub timetable: Timetable,
+}
+
 pub fn process(
     walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>>,
     walk_nodes: HashMap<usize, Coord>,
-) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>)> {
+) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>, Vec<ReverseNodeRoute>,)> {
     println!("Creating public transport graphs");
     let walk_graph_length = walk_graph.len();
     // for pt graph walk we ignore turning angles and linkIDs
@@ -87,5 +93,37 @@ pub fn process(
         })
     }
     assert_eq!(pt_graph_walk.len(), pt_graph_routes.len());
-    Ok((pt_graph_walk, pt_graph_routes))
+
+    let pt_graph_routes_reverse = reverse_graph_routes(&pt_graph_routes);
+
+    assert_eq!(pt_graph_walk.len(), pt_graph_routes_reverse.len());
+
+    Ok((pt_graph_walk, pt_graph_routes, pt_graph_routes_reverse))
+}
+
+
+fn reverse_graph_routes(
+    pt_graph_routes: &Vec<NodeRoute>,
+) -> Vec<ReverseNodeRoute> {
+    let mut pt_graph_routes_reverse: Vec<ReverseNodeRoute> = Vec::new();
+    // fill with empty ReverseNodeRoutes
+    for _ in 0..pt_graph_routes.len() {
+        pt_graph_routes_reverse.push(ReverseNodeRoute {
+            prev_stop_node: 0,
+            timetable: Timetable(Vec::new()),
+        });
+    }
+    // populate ReverseNodeRoutes with prev_stop_node and timetable
+    for (i, node_route) in pt_graph_routes.iter().enumerate() {
+        if node_route.next_stop_node != 0 {
+            let mut reversed_timetable: Timetable = node_route.timetable.clone();
+            reversed_timetable.reverse();
+            pt_graph_routes_reverse[node_route.next_stop_node] = ReverseNodeRoute {
+                prev_stop_node: i,
+                timetable: reversed_timetable,
+            };
+        }
+    }
+    pt_graph_routes_reverse
+   
 }

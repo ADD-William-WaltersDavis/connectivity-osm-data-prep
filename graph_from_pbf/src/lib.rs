@@ -3,6 +3,7 @@ use fs_err::File;
 use geo::{Coord, LineString};
 use serde::{Deserialize, Serialize};
 use std::io::{BufWriter, Write};
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct Edge {
@@ -33,6 +34,12 @@ pub struct InputTimetable {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Timetable(pub Vec<(usize, usize)>);
+
+impl Timetable {
+    pub fn reverse(&mut self) {
+        self.0.reverse();
+    }
+}
 
 pub fn write_json_file<T: Serialize>(
     file_name: String,
@@ -68,4 +75,18 @@ pub fn read_pt_stops() -> Result<Vec<(usize, Coord)>> {
     let reader = std::io::BufReader::new(file);
     let pt_stops: Vec<(usize, Coord)> = serde_json::from_reader(reader)?;
     Ok(pt_stops)
+}
+
+pub fn read_walk_nodes() -> Result<HashMap<usize, Coord>> {
+    let file = File::open("../data/walk_nodes.json")?;
+    let reader = std::io::BufReader::new(file);
+    let walk_nodes: HashMap<usize, Coord> = serde_json::from_reader(reader)?;
+    Ok(walk_nodes)
+}
+
+pub fn read_walk_graph() -> Result<Vec<Vec<(usize, usize, u16, u16, u32)>>> {
+    let file = File::open("../data/walk_graph.json")?;
+    let reader = std::io::BufReader::new(file);
+    let walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>> = serde_json::from_reader(reader)?;
+    Ok(walk_graph)
 }

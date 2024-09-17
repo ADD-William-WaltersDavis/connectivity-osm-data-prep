@@ -7,3 +7,4 @@ testing.sh
 __pycache__/
 output/
 temp/
+Cargo.lock
