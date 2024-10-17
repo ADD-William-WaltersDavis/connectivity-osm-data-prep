@@ -2,7 +2,7 @@ use anyhow::Result;
 use fs_err::File;
 use geo::{Coord, LineString};
 use serde::{Deserialize, Serialize};
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, Write, BufReader};
 use std::collections::HashMap;
 
 #[derive(Serialize)]
@@ -58,35 +58,35 @@ pub fn write_json_file<T: Serialize>(
 pub fn read_settings(mode: &str) -> Result<Settings> {
     let inpath = format!("settings/{}.json", mode);
     let file = File::open(inpath)?;
-    let reader = std::io::BufReader::new(file);
+    let reader = BufReader::new(file);
     let settings: Settings = serde_json::from_reader(reader)?;
     Ok(settings)
 }
 
 pub fn read_timetables() -> Result<Vec<InputTimetable>> {
     let file = File::open("../input/pt_route_timetables.json")?;
-    let reader = std::io::BufReader::new(file);
+    let reader = BufReader::new(file);
     let timetables: Vec<InputTimetable> = serde_json::from_reader(reader)?;
     Ok(timetables)
 }
 
 pub fn read_pt_stops() -> Result<Vec<(usize, Coord)>> {
     let file = File::open("../input/pt_stop_coordinates.json")?;
-    let reader = std::io::BufReader::new(file);
+    let reader = BufReader::new(file);
     let pt_stops: Vec<(usize, Coord)> = serde_json::from_reader(reader)?;
     Ok(pt_stops)
 }
 
 pub fn read_walk_nodes() -> Result<HashMap<usize, Coord>> {
     let file = File::open("../data/walk_nodes.json")?;
-    let reader = std::io::BufReader::new(file);
+    let reader = BufReader::new(file);
     let walk_nodes: HashMap<usize, Coord> = serde_json::from_reader(reader)?;
     Ok(walk_nodes)
 }
 
 pub fn read_walk_graph() -> Result<Vec<Vec<(usize, usize, u16, u16, u32)>>> {
     let file = File::open("../data/walk_graph.json")?;
-    let reader = std::io::BufReader::new(file);
+    let reader = BufReader::new(file);
     let walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>> = serde_json::from_reader(reader)?;
     Ok(walk_graph)
 }
