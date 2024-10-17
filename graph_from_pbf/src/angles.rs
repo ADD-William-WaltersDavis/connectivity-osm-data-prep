@@ -23,14 +23,14 @@ pub fn calculate(edges: &Vec<Edge>) -> HashMap<usize, Angles> {
         .into_par_iter()
         .progress_with(progress)
         .map(|edge| {
-            let angles: Angles = arrival_departure_angle_from_north(&edge.linestring);
+            let angles: Angles = arrival_and_departure_angles_from_north(&edge.linestring);
             (edge.id, angles)
         })
         .collect();
     angles
 }
 
-fn arrival_departure_angle_from_north(linestring: &LineString) -> Angles {
+fn arrival_and_departure_angles_from_north(linestring: &LineString) -> Angles {
     let first_point = linestring.points().next().unwrap();
     let second_point = linestring.points().nth(1).unwrap();
     let last_point = linestring.points().last().unwrap();
