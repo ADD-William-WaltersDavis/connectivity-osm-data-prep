@@ -86,7 +86,12 @@ fn calculate_traversal_time(
     speed: f64, //kph
     distance: f64, //meters
 ) -> usize {
-    let time = distance / (speed * 1000.0 / 3600.0);
+    // TODO: handle speeds of 0 or remove previously in dataset
+    let mut time = distance / (speed * 1000.0 / 3600.0);
+    if time > 3600.0 {
+        println!("Time is greater than 1 hour: {} {}", distance, speed);
+        time = 3600.0;
+    }
     time.round() as usize
 }
 
