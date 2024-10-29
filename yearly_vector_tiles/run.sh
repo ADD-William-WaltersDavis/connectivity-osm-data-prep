@@ -2,12 +2,12 @@
 
 set -e
 
-for year in 22, 23, 24; do 
+for year in 22 23 24; do 
 
     mkdir -p input
     wget https://download.geofabrik.de/europe/england-${year}0101.osm.pbf -O input/england-${year}0101.osm.pbf
 
-    for mode in "walk", "cycling"; do
+    for mode in "walk" "cycling"; do
         mkdir -p tmp
 
         time cargo run --release input/england-${year}0101.osm.pbf tmp/england-${year}-${mode}.geojson
