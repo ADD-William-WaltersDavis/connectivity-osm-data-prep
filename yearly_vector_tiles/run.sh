@@ -10,7 +10,7 @@ for year in 22 23 24; do
     for mode in "walk" "cycling"; do
         mkdir -p tmp
 
-        time cargo run --release input/england-${year}0101.osm.pbf tmp/england-${year}-${mode}.geojson
+        time cargo run --release input/england-${year}0101.osm.pbf tmp/england-${year}-${mode}.geojson ${mode}
 
         time tippecanoe tmp/england-${year}-${mode}.geojson \
             --force \
