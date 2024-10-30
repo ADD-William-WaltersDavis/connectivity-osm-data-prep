@@ -29,23 +29,5 @@ fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Re
     write_json_file(format!("{mode}_nodes"), output_directory, &nodes)?;
     write_json_file(format!("{mode}_graph"), output_directory, &graph)?;
 
-    // run public transport graph creation only
-    // let nodes = read_walk_nodes()?;
-    // let graph = read_walk_graph()?;
-
-    if mode == "walk" {
-        let (pt_graph_walk, pt_graph_routes, pt_graph_routes_reverse) = public_transport_graphs::process(graph, nodes)?;
-        write_json_file(format!("pt_graph_walk"), output_directory, &pt_graph_walk)?;
-        write_json_file(
-            format!("pt_graph_routes"),
-            output_directory,
-            &pt_graph_routes,
-        )?;
-        write_json_file(
-            format!("pt_graph_routes_reverse"),
-            output_directory,
-            &pt_graph_routes_reverse,
-        )?;
-    }
     Ok(())
 }
