@@ -2,8 +2,8 @@ use anyhow::Result;
 use fs_err::File;
 use geo::{Coord, LineString};
 use serde::{Deserialize, Serialize};
-use std::io::{BufWriter, Write, BufReader};
 use std::collections::HashMap;
+use std::io::{BufReader, BufWriter, Write};
 
 #[derive(Serialize)]
 pub struct Edge {

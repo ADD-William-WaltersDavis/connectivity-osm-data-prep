@@ -26,7 +26,7 @@ pub struct ReverseNodeRoute {
 pub fn process(
     walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>>,
     walk_nodes: HashMap<usize, Coord>,
-) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>, Vec<ReverseNodeRoute>,)> {
+) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>, Vec<ReverseNodeRoute>)> {
     println!("Creating public transport graphs");
     let walk_graph_length = walk_graph.len();
     // for pt graph walk we ignore turning angles and linkIDs
@@ -101,10 +101,7 @@ pub fn process(
     Ok((pt_graph_walk, pt_graph_routes, pt_graph_routes_reverse))
 }
 
-
-fn reverse_graph_routes(
-    pt_graph_routes: &Vec<NodeRoute>,
-) -> Vec<ReverseNodeRoute> {
+fn reverse_graph_routes(pt_graph_routes: &Vec<NodeRoute>) -> Vec<ReverseNodeRoute> {
     let mut pt_graph_routes_reverse: Vec<ReverseNodeRoute> = Vec::new();
     // fill with empty ReverseNodeRoutes
     for _ in 0..pt_graph_routes.len() {
@@ -125,5 +122,4 @@ fn reverse_graph_routes(
         }
     }
     pt_graph_routes_reverse
-   
 }
