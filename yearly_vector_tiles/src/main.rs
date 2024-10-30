@@ -9,16 +9,14 @@ use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID, WayID};
 use serde::Deserialize;
 
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 4 {
-        panic!("Call with the input path to an osm.pbf and a GeoTIFF file");
+        panic!("Call with the input path to an osm.pbf, output GeoJSON and mode");
     }
 
     let settings = read_settings(&args[3]).unwrap();
     run(&args[1], &args[2], settings).unwrap();
-
 }
 
 fn run(osm_path: &str, output_path: &str, settings: Settings) -> Result<()> {
@@ -57,7 +55,9 @@ fn scrape_osm(osm_path: &str, settings: Settings) -> Result<Vec<(WayID, LineStri
             nodes_progress.inc(1);
             node_mapping.insert(id, Coord { x: lon, y: lat });
         }
-        Element::Way { id, node_ids, tags, .. } => {
+        Element::Way {
+            id, node_ids, tags, ..
+        } => {
             if tags.contains_key("highway")
                 // select just ways meeting mode criteria
                 && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
