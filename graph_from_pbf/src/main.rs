@@ -6,19 +6,28 @@ pub mod public_transport_graphs;
 mod traversal_times;
 
 use anyhow::Result;
-use graph_from_pbf::{read_settings, write_json_file, Edge, Settings, read_walk_graph, read_walk_nodes};
+use graph_from_pbf::{
+    read_settings, read_walk_graph, read_walk_nodes, write_json_file, Edge, Settings,
+};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 4 {
-        panic!("Call with the input path to an osm.pbf, GeoTIFF and output directory");
+    if args.len() != 5 {
+        panic!("Call with the input path to an osm.pbf, GeoTIFF, output directory and PT toggle");
     }
+    let pt_toggle = args[4].parse::<bool>().unwrap();
     for mode in ["walk", "cycling"].iter() {
-        run(&args[1], &args[2], &args[3], mode).unwrap();
+        run(&args[1], &args[2], &args[3], pt_toggle, mode).unwrap();
     }
 }
 
-fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Result<()> {
+fn run(
+    osm_path: &str,
+    tif_path: &str,
+    output_directory: &str,
+    pt_toggle: bool,
+    mode: &str,
+) -> Result<()> {
     let settings = read_settings(mode)?;
 
     let (graph_nodes_lookup, edges) = edges::process(osm_path, &settings)?;
@@ -29,12 +38,9 @@ fn run(osm_path: &str, tif_path: &str, output_directory: &str, mode: &str) -> Re
     write_json_file(format!("{mode}_nodes"), output_directory, &nodes)?;
     write_json_file(format!("{mode}_graph"), output_directory, &graph)?;
 
-    // run public transport graph creation only
-    // let nodes = read_walk_nodes()?;
-    // let graph = read_walk_graph()?;
-
-    if mode == "walk" {
-        let (pt_graph_walk, pt_graph_routes, pt_graph_routes_reverse) = public_transport_graphs::process(graph, nodes)?;
+    if mode == "walk" && pt_toggle {
+        let (pt_graph_walk, pt_graph_routes, pt_graph_routes_reverse) =
+            public_transport_graphs::process(graph, nodes)?;
         write_json_file(format!("pt_graph_walk"), output_directory, &pt_graph_walk)?;
         write_json_file(
             format!("pt_graph_routes"),
