@@ -1,5 +1,7 @@
 #!/bin/bash
 
+read -p "Enter output GCS bucket: " bucket
+
 set -e
 
 for year in 14 15 16 17 18 19 20 21 22 23 24; do 
@@ -24,7 +26,7 @@ for year in 14 15 16 17 18 19 20 21 22 23 24; do
 
         time ../../pmtiles convert tmp/gb-${year}-${mode}.mbtiles tmp/gb-20${year}-${mode}.pmtiles
 
-        time gsutil -m cp tmp/gb-20${year}-${mode}.pmtiles gs://very-nice-tiles-bucket/yearly-osm/gb/20${year}-${mode}.pmtiles
+        time gsutil -m cp tmp/gb-20${year}-${mode}.pmtiles gs://${bucket}/yearly-osm/gb/20${year}-${mode}.pmtiles
         
         rm tmp/gb-${year}-${mode}.geojson
         rm tmp/gb-${year}-${mode}.mbtiles
