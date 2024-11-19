@@ -29,4 +29,11 @@ for year in 14 15 16 17 18 19 20 21 22 23 24; do
 
 	rm -rf ../data/${year}
 
+	# Remove the osm.pbf files to save space
+	for country in "england" "wales" "scotland"; do
+		if [ ! -e "../input/${country}-${year}0101.osm.pbf" ]; then
+			rm ../input/${country}-${year}0101.osm.pbf
+		fi
+	done
+
 done
