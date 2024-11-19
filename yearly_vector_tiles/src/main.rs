@@ -11,16 +11,17 @@ use serde::Deserialize;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 4 {
-        panic!("Call with the input path to an osm.pbf, output GeoJSON and mode");
+    if args.len() != 6 {
+        panic!("Call with the input paths to E/W/S osm.pbfs, output GeoJSON and mode");
     }
 
-    let settings = read_settings(&args[3]).unwrap();
-    run(&args[1], &args[2], settings).unwrap();
+    let osm_paths: Vec<&str> = vec![&args[1], &args[2], &args[3]];
+    let settings = read_settings(&args[5]).unwrap();
+    run(osm_paths, &args[4], settings).unwrap();
 }
 
-fn run(osm_path: &str, output_path: &str, settings: Settings) -> Result<()> {
-    let edges = scrape_osm(osm_path, settings)?;
+fn run(osm_paths: Vec<&str>, output_path: &str, settings: Settings) -> Result<()> {
+    let edges = scrape_osm(osm_paths, settings)?;
 
     println!("Writing output");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
@@ -37,43 +38,47 @@ fn run(osm_path: &str, output_path: &str, settings: Settings) -> Result<()> {
     Ok(())
 }
 
-fn scrape_osm(osm_path: &str, settings: Settings) -> Result<Vec<(WayID, LineString)>> {
+fn scrape_osm(osm_paths: Vec<&str>, settings: Settings) -> Result<Vec<(WayID, LineString)>> {
     let mut node_mapping: HashMap<NodeID, Coord> = HashMap::new();
     let mut highways: Vec<(WayID, Vec<NodeID>)> = Vec::new();
-    let mut first_way = true;
-    println!("Reading {osm_path}");
-    let nodes_progress = ProgressBar::new_spinner().with_style(
-        ProgressStyle::with_template("[{elapsed_precise}] {human_len} nodes read ({per_sec})")
-            .unwrap(),
-    );
-    let ways_progress = ProgressBar::new_spinner().with_style(
-        ProgressStyle::with_template("[{elapsed_precise}] {human_len} ways read ({per_sec})")
-            .unwrap(),
-    );
-    osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
-        Element::Node { id, lon, lat, .. } => {
-            nodes_progress.inc(1);
-            node_mapping.insert(id, Coord { x: lon, y: lat });
-        }
-        Element::Way {
-            id, node_ids, tags, ..
-        } => {
-            if tags.contains_key("highway")
-                // select just ways meeting mode criteria
-                && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
-            {
-                if first_way {
-                    nodes_progress.finish();
-                    first_way = false;
-                }
-                ways_progress.inc(1);
-                highways.push((id, node_ids));
+    let mut unique_ways: HashSet<WayID> = HashSet::new();
+    for osm_path in osm_paths {
+        let mut first_way = true;
+        println!("Reading {osm_path}");
+        let nodes_progress = ProgressBar::new_spinner().with_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {human_len} nodes read ({per_sec})")
+                .unwrap(),
+        );
+        let ways_progress = ProgressBar::new_spinner().with_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {human_len} ways read ({per_sec})")
+                .unwrap(),
+        );
+        osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
+            Element::Node { id, lon, lat, .. } => {
+                nodes_progress.inc(1);
+                node_mapping.insert(id, Coord { x: lon, y: lat });
             }
-        }
-        Element::Relation { .. } | Element::Bounds { .. } => {}
-    })?;
-    ways_progress.finish();
-
+            Element::Way {
+                id, node_ids, tags, ..
+            } => {
+                if tags.contains_key("highway")
+                    // select just ways meeting mode criteria
+                    && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
+                    && unique_ways.get(&id).is_none()
+                {
+                    if first_way {
+                        nodes_progress.finish();
+                        first_way = false;
+                    }
+                    ways_progress.inc(1);
+                    highways.push((id, node_ids));
+                    unique_ways.insert(id);
+                }
+            }
+            Element::Relation { .. } | Element::Bounds { .. } => {}
+        })?;
+        ways_progress.finish();
+    }
     Ok(split_edges(node_mapping, highways))
 }
 
