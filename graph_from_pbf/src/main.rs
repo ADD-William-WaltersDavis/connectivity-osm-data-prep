@@ -12,17 +12,18 @@ use graph_from_pbf::{
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 5 {
+    if args.len() != 7 {
         panic!("Call with the input path to an osm.pbf, GeoTIFF, output directory and PT toggle");
     }
-    let pt_toggle = args[4].parse::<bool>().unwrap();
+    let osm_paths: Vec<&str> = vec![&args[1], &args[2], &args[3]];
+    let pt_toggle = args[6].parse::<bool>().unwrap();
     for mode in ["walk", "cycling"].iter() {
-        run(&args[1], &args[2], &args[3], pt_toggle, mode).unwrap();
+        run(osm_paths.clone(), &args[4], &args[5], pt_toggle, mode).unwrap();
     }
 }
 
 fn run(
-    osm_path: &str,
+    osm_paths: Vec<&str>,
     tif_path: &str,
     output_directory: &str,
     pt_toggle: bool,
@@ -30,7 +31,7 @@ fn run(
 ) -> Result<()> {
     let settings = read_settings(mode)?;
 
-    let (graph_nodes_lookup, edges) = edges::process(osm_path, &settings)?;
+    let (graph_nodes_lookup, edges) = edges::process(osm_paths, &settings)?;
     let traversal_times = traversal_times::calculate(&edges, tif_path, &settings);
     let angles = angles::calculate(&edges);
     let (graph, nodes) = graph::process(graph_nodes_lookup, traversal_times, angles, edges);

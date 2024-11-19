@@ -1,22 +1,22 @@
 use crate::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use geo::{Coord, LineString};
 use indicatif::{ProgressBar, ProgressStyle};
 use osm_reader::{Element, NodeID, WayID};
 
 pub fn process(
-    osm_path: &str,
+    osm_paths: Vec<&str>,
     settings: &Settings,
 ) -> Result<(HashMap<i64, (usize, Coord)>, Vec<Edge>)> {
-    let (node_mapping, ways) = scrape_osm(osm_path, &settings)?;
+    let (node_mapping, ways) = scrape_osm(osm_paths, &settings)?;
     let edges: Vec<Edge> = split_ways_into_edges(&node_mapping, ways);
     let graph_nodes_lookup = get_graph_nodes_lookup(node_mapping, &edges);
     Ok((graph_nodes_lookup, edges))
 }
 
 fn scrape_osm(
-    osm_path: &str,
+    osm_paths: Vec<&str>,
     settings: &Settings,
 ) -> Result<(
     HashMap<NodeID, Coord>,
@@ -24,40 +24,45 @@ fn scrape_osm(
 )> {
     let mut node_mapping: HashMap<NodeID, Coord> = HashMap::new();
     let mut highways: Vec<(WayID, Vec<NodeID>, bool, bool)> = Vec::new();
-    let mut first_way = true;
-    println!("Reading {osm_path}");
-    let nodes_progress = ProgressBar::new_spinner().with_style(
-        ProgressStyle::with_template("[{elapsed_precise}] {human_len} nodes read ({per_sec})")
-            .unwrap(),
-    );
-    let ways_progress = ProgressBar::new_spinner().with_style(
-        ProgressStyle::with_template("[{elapsed_precise}] {human_len} ways read ({per_sec})")
-            .unwrap(),
-    );
-    osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
-        Element::Node { id, lon, lat, .. } => {
-            nodes_progress.inc(1);
-            node_mapping.insert(id, Coord { x: lon, y: lat });
-        }
-        Element::Way { id, node_ids, tags } => {
-            if tags.contains_key("highway")
-                // select just ways meeting mode criteria
-                && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
-            {
-                // TODO: add oneway tag filtering here
-                if first_way {
-                    nodes_progress.finish();
-                    first_way = false;
-                }
-                ways_progress.inc(1);
-                let (forward, backward) = oneway_access(&tags, &settings);
-                highways.push((id, node_ids, forward, backward));
+    let mut unique_ways: HashSet<WayID> = HashSet::new();
+    for osm_path in osm_paths {
+        let mut first_way = true;
+        println!("Reading {osm_path}");
+        let nodes_progress = ProgressBar::new_spinner().with_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {human_len} nodes read ({per_sec})")
+                .unwrap(),
+        );
+        let ways_progress = ProgressBar::new_spinner().with_style(
+            ProgressStyle::with_template("[{elapsed_precise}] {human_len} ways read ({per_sec})")
+                .unwrap(),
+        );
+        osm_reader::parse(&fs_err::read(osm_path)?, |elem| match elem {
+            Element::Node { id, lon, lat, .. } => {
+                nodes_progress.inc(1);
+                node_mapping.insert(id, Coord { x: lon, y: lat });
             }
-        }
-        Element::Relation { .. } | Element::Bounds { .. } => {}
-    })?;
-    ways_progress.finish();
-
+            Element::Way { id, node_ids, tags } => {
+                if tags.contains_key("highway")
+                    // select just ways meeting mode criteria
+                    && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
+                    && unique_ways.get(&id).is_none()
+                {
+                    // TODO: add oneway tag filtering here
+                    if first_way {
+                        nodes_progress.finish();
+                        first_way = false;
+                    }
+                    ways_progress.inc(1);
+                    let (forward, backward) = oneway_access(&tags, &settings);
+                    highways.push((id, node_ids, forward, backward));
+                    unique_ways.insert(id);
+                }
+            }
+            Element::Relation { .. } | Element::Bounds { .. } => {}
+        })?;
+        ways_progress.finish();
+    }
+    
     Ok((node_mapping, highways))
 }
 

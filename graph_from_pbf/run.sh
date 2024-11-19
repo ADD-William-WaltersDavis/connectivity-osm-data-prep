@@ -12,10 +12,12 @@ if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
 	gunzip ../input/UK-dem-50m-4326.tif.gz
 fi
 
-if [ ! -e "../input/great-britain-240801.osm.pbf" ]; then
-	wget http://download.geofabrik.de/europe/great-britain-240801.osm.pbf -P ../input
-fi
+for country in "england" "wales" "scotland"; do
+	if [ ! -e "../input/${country}-240901.osm.pbf" ]; then
+		wget https://download.geofabrik.de/europe/united-kingdom/${country}-240901.osm.pbf -O ../input/${country}-240901.osm.pbf
+	fi
+done
 
 mkdir -p ../data
 # Assume the root directory has the osm.pbf, used by many other scripts in this repo
-time cargo run --release ../input/great-britain-240801.osm.pbf ../input/UK-dem-50m-4326.tif ../data true
+time cargo run --release ../input/england-240901.osm.pbf ../input/wales-240901.osm.pbf ../input/scotland-240901.osm.pbf ../input/UK-dem-50m-4326.tif ../data true

@@ -3,7 +3,6 @@
 set -e
 
 # Enter filename
-read -p "Enter the country name (england, wales or scotland): " country
 
 mkdir -p ../input
 if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
@@ -16,16 +15,17 @@ if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
 fi
 
 for year in 14 15 16 17 18 19 20 21 22 23 24; do
-
-	if [ ! -e "../input/${country}-${year}0101.osm.pbf" ]; then
-		wget https://download.geofabrik.de/europe/united-kingdom/${country}-${year}0101.osm.pbf -O ../input/${country}-${year}0101.osm.pbf
-	fi
+	for country in "england" "wales" "scotland"; do
+		if [ ! -e "../input/${country}-${year}0101.osm.pbf" ]; then
+			wget https://download.geofabrik.de/europe/united-kingdom/${country}-${year}0101.osm.pbf -O ../input/${country}-${year}0101.osm.pbf
+		fi
+	done
 
 	mkdir -p ../data/${year}
 	# Assume the root directory has the osm.pbf, used by many other scripts in this repo
-	time cargo run --release ../input/${country}-${year}0101.osm.pbf ../input/UK-dem-50m-4326.tif ../data/${year} false
+	time cargo run --release ../input/england-${year}0101.osm.pbf ../input/wales-${year}0101.osm.pbf ../input/scotland-${year}0101.osm.pbf ../input/UK-dem-50m-4326.tif ../data/${year} false
 
-	time gsutil -m cp -r ../data/${year} gs://connectivity-osm/graphs/${country}/${year}
+	time gsutil -m cp -r ../data/${year} gs://connectivity-osm/graphs/gb/${year}
 
 	rm -rf ../data/${year}
 
