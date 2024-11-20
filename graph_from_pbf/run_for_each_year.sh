@@ -2,6 +2,8 @@
 
 set -e
 
+read -p "Enter GCS bucket: " bucket
+
 # Enter filename
 
 mkdir -p ../input
@@ -21,11 +23,26 @@ for year in 14 15 16 17 18 19 20 21 22 23 24; do
 		fi
 	done
 
+	for pt_file in "pt_route_timetables_20${year}.json" "pt_stop_coordinates_20${year}.json"; do
+		if [ ! -e "../input/${pt_file}" ]; then
+			gsutil -m cp gs://${bucket}/pt_preprocessing/${pt_file} ../input/${pt_file}
+		fi
+	done
+
 	mkdir -p ../data/${year}
 	# Assume the root directory has the osm.pbf, used by many other scripts in this repo
-	time cargo run --release ../input/england-${year}0101.osm.pbf ../input/wales-${year}0101.osm.pbf ../input/scotland-${year}0101.osm.pbf ../input/UK-dem-50m-4326.tif ../data/${year} false
+	time cargo run --release \
+		../input/england-${year}0101.osm.pbf \
+		../input/wales-${year}0101.osm.pbf \
+		../input/scotland-${year}0101.osm.pbf \
+		../input/UK-dem-50m-4326.tif \
+		../data/${year} \
+		true \
+		../input/pt_route_timetables_20${year}.json \
+		../input/pt_stop_coordinates_20${year}.json
 
-	time gsutil -m cp -r ../data/${year} gs://connectivity-osm/graphs/gb/${year}
+
+	time gsutil -m cp -r ../data/${year} gs://${bucket}/graphs/gb/${year}
 
 	rm -rf ../data/${year}
 

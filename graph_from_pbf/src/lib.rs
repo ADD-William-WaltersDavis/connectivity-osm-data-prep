@@ -63,15 +63,15 @@ pub fn read_settings(mode: &str) -> Result<Settings> {
     Ok(settings)
 }
 
-pub fn read_timetables() -> Result<Vec<InputTimetable>> {
-    let file = File::open("../input/pt_route_timetables.json")?;
+pub fn read_timetables(path: &str) -> Result<Vec<InputTimetable>> {
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let timetables: Vec<InputTimetable> = serde_json::from_reader(reader)?;
     Ok(timetables)
 }
 
-pub fn read_pt_stops() -> Result<Vec<(usize, Coord)>> {
-    let file = File::open("../input/pt_stop_coordinates.json")?;
+pub fn read_pt_stops(path: &str) -> Result<Vec<(usize, Coord)>> {
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let pt_stops: Vec<(usize, Coord)> = serde_json::from_reader(reader)?;
     Ok(pt_stops)

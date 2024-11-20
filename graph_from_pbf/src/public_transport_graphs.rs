@@ -26,6 +26,7 @@ pub struct ReverseNodeRoute {
 pub fn process(
     walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>>,
     walk_nodes: HashMap<usize, Coord>,
+    pt_paths: Vec<&str>,
 ) -> Result<(Vec<NodeWalk>, Vec<NodeRoute>, Vec<ReverseNodeRoute>)> {
     println!("Creating public transport graphs");
     let walk_graph_length = walk_graph.len();
@@ -44,7 +45,7 @@ pub fn process(
         })
         .collect();
 
-    let pt_stops = read_pt_stops()?;
+    let pt_stops = read_pt_stops(pt_paths[1])?;
     add_stops(
         &pt_stops,
         walk_nodes,
@@ -52,7 +53,7 @@ pub fn process(
         &walk_graph_length,
     );
 
-    let timetables = read_timetables()?;
+    let timetables = read_timetables(pt_paths[0])?;
 
     println!("Creating public transport routes graph");
     // create pt graph routes and pad with empty NodeRoutes for non-pt route nodes
