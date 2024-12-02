@@ -83,7 +83,7 @@ pub fn process(
         // add pt route node edge to pt stop node
         pt_graph_walk[pt_stop_node]
             .edges
-            .push((0, length_before_routes + i));
+            .push((length_before_routes + i, 0));
         // add pt route node edge to next node
         pt_graph_routes.push(NodeRoute {
             next_stop_node,
