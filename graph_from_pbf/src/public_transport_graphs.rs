@@ -8,7 +8,7 @@ use std::collections::HashMap;
 #[derive(Serialize)]
 pub struct NodeWalk {
     pub has_pt: bool,
-    pub edges: Vec<(usize, usize)>,
+    pub edges: Vec<(usize, usize)>, // (next node, traversal time)
 }
 
 #[derive(Serialize)]
@@ -36,7 +36,7 @@ pub fn process(
         .map(|link| {
             let mut edges = Vec::new();
             for (traversal_time, to, _, _, _) in link {
-                edges.push((traversal_time, to));
+                edges.push((to, traversal_time));
             }
             NodeWalk {
                 has_pt: false,
@@ -78,7 +78,7 @@ pub fn process(
         }
         pt_graph_walk.push(NodeWalk {
             has_pt,
-            edges: vec![(0, pt_stop_node)],
+            edges: vec![(pt_stop_node, 0)],
         });
         // add pt route node edge to pt stop node
         pt_graph_walk[pt_stop_node]

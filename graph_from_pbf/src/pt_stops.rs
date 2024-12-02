@@ -38,10 +38,10 @@ pub fn add_stops(
                 Point(walk_nodes[&node_id]).haversine_distance(&Point(*coord)) / 1.33;
             pt_graph_walk[pt_graph_walk_id]
                 .edges
-                .push((traversal_time as usize, *node_id));
+                .push((*node_id, traversal_time as usize));
             pt_graph_walk[*node_id]
                 .edges
-                .push((traversal_time as usize, pt_graph_walk_id));
+                .push((pt_graph_walk_id, traversal_time as usize));
         }
         progress.inc(1);
     }
