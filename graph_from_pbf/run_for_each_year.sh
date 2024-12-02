@@ -42,7 +42,7 @@ for year in 14 15 16 17 18 19 20 21 22 23 24; do
 		../input/pt_stop_coordinates_20${year}.json
 
 
-	time gsutil -m cp -r ../data/${year} gs://${bucket}/graphs/gb/${year}
+	time gsutil -m cp -r ../data/${year} gs://${bucket}/graphs/gb
 
 	rm -rf ../data/${year}
 
