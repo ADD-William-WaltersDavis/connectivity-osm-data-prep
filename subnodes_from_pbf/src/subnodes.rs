@@ -150,14 +150,14 @@ fn get_subnodes(
     let mut time_to_component_line_start_backward = 0.0;
 
     // add first subnode of the link
-    subnodes.push(SubNode(
-        start_node_id,
-        end_node_id,
-        component_lines[0].line.start.x,
-        component_lines[0].line.start.y,
-        0,
-        link_forward_traversal_time.round() as usize,
-    ));
+    subnodes.push(SubNode {
+        start_node: start_node_id,
+        end_node: end_node_id,
+        longitude: component_lines[0].line.start.x,
+        latitude: component_lines[0].line.start.y,
+        time_to_start: 0,
+        time_to_end: link_forward_traversal_time.round() as usize,
+    });
     for component_line in component_lines.iter() {
         // TODO: adjust this threshold based on the observed accuracy
         // currently max distance between 7.5m and minumum ~7.5/2 = 3.75m
@@ -174,31 +174,33 @@ fn get_subnodes(
                     fraction_across_line * component_line.backward_traversal_time;
                 let (subnode_x, subnode_y) =
                     get_subnode_coords(fraction_across_line as f64, &component_line.line);
-                subnodes.push(SubNode(
-                    start_node_id,
-                    end_node_id,
-                    subnode_x,
-                    subnode_y,
-                    (time_to_component_line_start_backward + backward_time_from_subnode).round()
-                        as usize,
-                    (link_forward_traversal_time
+                subnodes.push(SubNode {
+                    start_node: start_node_id,
+                    end_node: end_node_id,
+                    longitude: subnode_x,
+                    latitude: subnode_y,
+                    time_to_start: (time_to_component_line_start_backward
+                        + backward_time_from_subnode)
+                        .round() as usize,
+                    time_to_end: (link_forward_traversal_time
                         - (time_to_component_line_start_forward + forward_time_from_subnode))
                         .round() as usize,
-                ));
+                });
             }
         }
         // add the last subnode of component line
-        subnodes.push(SubNode(
-            start_node_id,
-            end_node_id,
-            component_line.line.end.x,
-            component_line.line.end.y,
-            (time_to_component_line_start_backward + component_line.backward_traversal_time).round()
-                as usize,
-            (link_forward_traversal_time
+        subnodes.push(SubNode {
+            start_node: start_node_id,
+            end_node: end_node_id,
+            longitude: component_line.line.end.x,
+            latitude: component_line.line.end.y,
+            time_to_start: (time_to_component_line_start_backward
+                + component_line.backward_traversal_time)
+                .round() as usize,
+            time_to_end: (link_forward_traversal_time
                 - (time_to_component_line_start_forward + component_line.forward_traversal_time))
                 .round() as usize,
-        ));
+        });
         time_to_component_line_start_forward += component_line.forward_traversal_time;
         time_to_component_line_start_backward += component_line.backward_traversal_time;
     }

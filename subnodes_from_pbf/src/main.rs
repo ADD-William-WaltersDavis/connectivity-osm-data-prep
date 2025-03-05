@@ -2,7 +2,7 @@ mod edges;
 mod subnodes;
 
 use anyhow::Result;
-use subnodes_from_pbf::{read_settings, write_json_file, Edge, Settings, SubNode};
+use subnodes_from_pbf::{read_settings, write_subnodes_parquet, Edge, Settings, SubNode};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -21,7 +21,7 @@ fn run(osm_paths: Vec<&str>, tif_path: &str, output_directory: &str, mode: &str)
     let (graph_nodes_lookup, edges) = edges::process(osm_paths, &settings)?;
     let network_subnodes = subnodes::process(&edges, tif_path, &settings, graph_nodes_lookup);
 
-    write_json_file(format!("{mode}_subnodes"), output_directory, &network_subnodes)?;
-
+    // write_json_file(format!("{mode}_subnodes"), output_directory, &network_subnodes)?;
+    write_subnodes_parquet(&network_subnodes, output_directory, mode)?;
     Ok(())
 }
