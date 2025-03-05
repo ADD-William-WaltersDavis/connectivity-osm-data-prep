@@ -169,7 +169,7 @@ fn get_subnodes(
                     inner_subnode_index as f32 / (n_inner_subnodes + 1) as f32;
 
                 let forward_time_from_subnode =
-                    (1.0 - fraction_across_line) * component_line.forward_traversal_time;
+                    fraction_across_line * component_line.forward_traversal_time;
                 let backward_time_from_subnode =
                     fraction_across_line * component_line.backward_traversal_time;
                 let (subnode_x, subnode_y) =
