@@ -56,9 +56,8 @@ fn calculate_edge_traversal_time(
 
         let length = line.haversine_length() as f32;
 
-        let height1 = 0.0;
-        match elevation.get_height_for_lon_lat(pt1.x as f32, pt1.y as f32) {
-            Some(height1) => height1,
+        let height1 = match elevation.get_height_for_lon_lat(pt1.x as f32, pt1.y as f32) {
+            Some(height) => height,
             None => {
                 // if coordinates outside the UK elevation model, assume flat terrain
                 // TODO: remove these coordinates from the graph
@@ -69,9 +68,8 @@ fn calculate_edge_traversal_time(
             }
         };
         let pt2 = line.end;
-        let height2 = 0.0;
-        match elevation.get_height_for_lon_lat(pt2.x as f32, pt2.y as f32) {
-            Some(height2) => height2,
+        let height2 = match elevation.get_height_for_lon_lat(pt2.x as f32, pt2.y as f32) {
+            Some(height) => height,
             None => {
                 println!("Failed to get height for lon: {}, lat: {}", pt2.x, pt2.y);
                 forward_traversal_time += length / speed;
