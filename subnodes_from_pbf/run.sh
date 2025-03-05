@@ -9,16 +9,16 @@ if [ ! -e "../input/UK-dem-50m-4326.tif" ]; then
 fi
 
 for country in "england" "wales" "scotland"; do
-	if [ ! -e "../input/${country}-240901.osm.pbf" ]; then
-		wget https://download.geofabrik.de/europe/united-kingdom/${country}-240901.osm.pbf -O ../input/${country}-240901.osm.pbf
+	if [ ! -e "../input/${country}-240101.osm.pbf" ]; then
+		wget https://download.geofabrik.de/europe/united-kingdom/${country}-240101.osm.pbf -O ../input/${country}-240101.osm.pbf
 	fi
 done
 
 mkdir -p ../data
 
 time cargo run --release \
-	../input/england-240901.osm.pbf \
-	../input/wales-240901.osm.pbf \
-	../input/scotland-240901.osm.pbf \
+	../input/england-240101.osm.pbf \
+	../input/wales-240101.osm.pbf \
+	../input/scotland-240101.osm.pbf \
 	../input/UK-dem-50m-4326.tif \
 	../data \
