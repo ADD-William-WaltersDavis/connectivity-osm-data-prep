@@ -7,7 +7,7 @@ use elevation::GeoTiffElevation;
 use fs_err::File;
 use geo::{Coord, HaversineLength, Line, LineString};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use proj::Proj;
+use proj::{Proj, Coord};
 use rayon::prelude::*;
 
 pub fn process(
@@ -17,6 +17,10 @@ pub fn process(
     graph_node_lookup: HashMap<i64, (usize, Coord)>,
 ) -> Vec<SubNode> {
     println!("Getting subnodes");
+
+    let from = "EPSG:4326";
+    let to = "EPSG:27700";
+    let ll_to_en = Proj::new_known_crs(&from, &to, None).unwrap();
 
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
@@ -39,6 +43,7 @@ pub fn process(
                     settings.speed,
                     settings.ascention_speed,
                     &graph_node_lookup,
+                    ll_to_en,
                 )
             })
         })
@@ -140,7 +145,7 @@ fn get_subnode_coords(fraction_across_line: f64, line: &Line) -> (f64, f64) {
 fn get_easting_northing_from_lon_lat(
     longitude: f64,
     latitude: f64,
-    ll_to_en: &Proj,
+    ll_to_en: Proj,
 ) -> (f64, f64) {
     ll_to_en
         .convert((longitude, latitude))
@@ -163,7 +168,7 @@ fn get_subnodes(
     let (start_easting, start_northing) = get_easting_northing_from_lon_lat(
         component_lines[0].line.start.x,
         component_lines[0].line.start.y,
-        &ll_to_en,
+        ll_to_en,
     );
     // add first subnode of the link
     subnodes.push(SubNode {
@@ -191,7 +196,7 @@ fn get_subnodes(
                 let (subnode_x, subnode_y) =
                     get_subnode_coords(fraction_across_line as f64, &component_line.line);
                 let (subnode_easting, subnode_northing) =
-                    get_easting_northing_from_lon_lat(subnode_x, subnode_y, &ll_to_en);
+                    get_easting_northing_from_lon_lat(subnode_x, subnode_y, ll_to_en);
                 subnodes.push(SubNode {
                     start_node: start_node_id,
                     end_node: end_node_id,
@@ -209,7 +214,7 @@ fn get_subnodes(
         let (end_easting, end_northing) = get_easting_northing_from_lon_lat(
             component_line.line.end.x,
             component_line.line.end.y,
-            &ll_to_en,
+            ll_to_en,
         );
         // add the last subnode of component line
         subnodes.push(SubNode {
@@ -238,10 +243,8 @@ fn calculate_subnodes(
     speed: f32,
     ascention_speed: f32,
     graph_node_lookup: &HashMap<i64, (usize, Coord)>,
+    ll_to_en: Proj,
 ) -> Vec<SubNode> {
-    let from = "EPSG:4326";
-    let to = "EPSG:27700";
-    let ll_to_en = Proj::new_known_crs(&from, &to, None).unwrap();
     let (link_forward_traversal_time, link_backward_traversal_time, line_details) =
         get_traversal_times(linestring, elevation, speed, ascention_speed);
 
