@@ -1,11 +1,10 @@
 use anyhow::Result;
 use fs_err::File;
 use geo::LineString;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::io::BufReader;
 use polars::prelude::*;
 
-#[derive(Serialize)]
 pub struct Edge {
     pub id: usize,
     pub osm_id: i64,
@@ -16,7 +15,6 @@ pub struct Edge {
     pub backward: bool,
 }
 
-#[derive(Serialize)]
 pub struct SubNode {
     pub start_node: usize,    // start_node
     pub end_node: usize,      // end_node
