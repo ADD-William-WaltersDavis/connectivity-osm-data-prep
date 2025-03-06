@@ -52,11 +52,11 @@ pub fn write_subnodes_parquet(
         .map(|x| x.start_node as u32)
         .collect();
     let end_nodes: Vec<u32> = network_subnodes.iter().map(|x| x.end_node as u32).collect();
-    let longitudes: Vec<f32> = network_subnodes
+    let eastings: Vec<f32> = network_subnodes
         .iter()
-        .map(|x| x.longitude as f32)
+        .map(|x| x.easting as f32)
         .collect();
-    let latitudes: Vec<f32> = network_subnodes.iter().map(|x| x.latitude as f32).collect();
+    let northings: Vec<f32> = network_subnodes.iter().map(|x| x.northing as f32).collect();
     let time_to_starts: Vec<u32> = network_subnodes
         .iter()
         .map(|x| x.time_to_start as u32)
@@ -69,8 +69,8 @@ pub fn write_subnodes_parquet(
     let df: PolarsResult<DataFrame> = df!(
         "start_node" => start_nodes,
         "end_node" => end_nodes,
-        "longitude" => longitudes,
-        "latitude" => latitudes,
+        "easting" => eastings,
+        "northing" => northings,
         "time_to_start" => time_to_starts,
         "time_to_end" => time_to_ends,
     );
