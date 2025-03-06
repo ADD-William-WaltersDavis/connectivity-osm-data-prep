@@ -21,7 +21,6 @@ fn run(osm_paths: Vec<&str>, tif_path: &str, output_directory: &str, mode: &str)
     let (graph_nodes_lookup, edges) = edges::process(osm_paths, &settings)?;
     let network_subnodes = subnodes::process(&edges, tif_path, &settings, graph_nodes_lookup);
 
-    // write_json_file(format!("{mode}_subnodes"), output_directory, &network_subnodes)?;
     write_subnodes_parquet(&network_subnodes, output_directory, mode)?;
     Ok(())
 }
