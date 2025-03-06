@@ -18,8 +18,8 @@ pub struct Edge {
 pub struct SubNode {
     pub start_node: usize,    // start_node
     pub end_node: usize,      // end_node
-    pub easting: f64,       // longitude
-    pub northing: f64,        // latitude
+    pub longitude: f64,       // longitude
+    pub latitude: f64,        // latitude
     pub time_to_start: usize, // time_to_start
     pub time_to_end: usize,   // time_to_end
 }

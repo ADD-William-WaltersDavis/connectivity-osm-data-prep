@@ -7,7 +7,6 @@ use elevation::GeoTiffElevation;
 use fs_err::File;
 use geo::{Coord, HaversineLength, Line, LineString};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use proj::{Proj, Coord};
 use rayon::prelude::*;
 
 pub fn process(
@@ -17,11 +16,6 @@ pub fn process(
     graph_node_lookup: HashMap<i64, (usize, Coord)>,
 ) -> Vec<SubNode> {
     println!("Getting subnodes");
-
-    let from = "EPSG:4326";
-    let to = "EPSG:27700";
-    let ll_to_en = Proj::new_known_crs(&from, &to, None).unwrap();
-
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
 
@@ -43,7 +37,6 @@ pub fn process(
                     settings.speed,
                     settings.ascention_speed,
                     &graph_node_lookup,
-                    ll_to_en,
                 )
             })
         })
@@ -141,23 +134,12 @@ fn get_subnode_coords(fraction_across_line: f64, line: &Line) -> (f64, f64) {
         (1.0 - fraction_across_line) * line.start.y + fraction_across_line * line.end.y,
     )
 }
-
-fn get_easting_northing_from_lon_lat(
-    longitude: f64,
-    latitude: f64,
-    ll_to_en: Proj,
-) -> (f64, f64) {
-    ll_to_en
-        .convert((longitude, latitude))
-        .expect("Failed to convert lon/lat to easting/northing")
-}
 fn get_subnodes(
     start_node_id: usize,
     end_node_id: usize,
     link_forward_traversal_time: f32,
     _link_backward_traversal_time: f32, // don't use could remove
     component_lines: Vec<ComponentLine>,
-    ll_to_en: Proj,
 ) -> Vec<SubNode> {
     let mut subnodes: Vec<SubNode> = Vec::new();
 
@@ -165,17 +147,12 @@ fn get_subnodes(
     let mut time_to_component_line_start_forward = 0.0;
     let mut time_to_component_line_start_backward = 0.0;
 
-    let (start_easting, start_northing) = get_easting_northing_from_lon_lat(
-        component_lines[0].line.start.x,
-        component_lines[0].line.start.y,
-        ll_to_en,
-    );
     // add first subnode of the link
     subnodes.push(SubNode {
         start_node: start_node_id,
         end_node: end_node_id,
-        easting: start_easting,
-        northing: start_northing,
+        longitude: component_lines[0].line.start.x,
+        latitude: component_lines[0].line.start.y,
         time_to_start: 0,
         time_to_end: link_forward_traversal_time.round() as usize,
     });
@@ -195,13 +172,11 @@ fn get_subnodes(
                     fraction_across_line * component_line.backward_traversal_time;
                 let (subnode_x, subnode_y) =
                     get_subnode_coords(fraction_across_line as f64, &component_line.line);
-                let (subnode_easting, subnode_northing) =
-                    get_easting_northing_from_lon_lat(subnode_x, subnode_y, ll_to_en);
                 subnodes.push(SubNode {
                     start_node: start_node_id,
                     end_node: end_node_id,
-                    easting: subnode_easting,
-                    northing: subnode_northing,
+                    longitude: subnode_x,
+                    latitude: subnode_y,
                     time_to_start: (time_to_component_line_start_backward
                         + backward_time_from_subnode)
                         .round() as usize,
@@ -211,17 +186,12 @@ fn get_subnodes(
                 });
             }
         }
-        let (end_easting, end_northing) = get_easting_northing_from_lon_lat(
-            component_line.line.end.x,
-            component_line.line.end.y,
-            ll_to_en,
-        );
         // add the last subnode of component line
         subnodes.push(SubNode {
             start_node: start_node_id,
             end_node: end_node_id,
-            easting: end_easting,
-            northing: end_northing,
+            longitude: component_line.line.end.x,
+            latitude: component_line.line.end.y,
             time_to_start: (time_to_component_line_start_backward
                 + component_line.backward_traversal_time)
                 .round() as usize,
@@ -243,7 +213,6 @@ fn calculate_subnodes(
     speed: f32,
     ascention_speed: f32,
     graph_node_lookup: &HashMap<i64, (usize, Coord)>,
-    ll_to_en: Proj,
 ) -> Vec<SubNode> {
     let (link_forward_traversal_time, link_backward_traversal_time, line_details) =
         get_traversal_times(linestring, elevation, speed, ascention_speed);
@@ -257,6 +226,5 @@ fn calculate_subnodes(
         link_forward_traversal_time,
         link_backward_traversal_time,
         line_details,
-        ll_to_en,
     )
 }
