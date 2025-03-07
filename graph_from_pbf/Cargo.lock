@@ -66,6 +66,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "connectivity"
+version = "0.1.0"
+source = "git+https://github.com/ADD-William-WaltersDavis/connectivity#f7539dfb9a0edcd46b3183da544846f5a6f360c7"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "geo",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "console"
 version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -241,6 +253,7 @@ name = "graph_from_pbf"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "connectivity",
  "elevation",
  "fs-err",
  "geo",

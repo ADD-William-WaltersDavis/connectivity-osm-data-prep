@@ -7,8 +7,9 @@ mod traversal_times;
 
 use anyhow::Result;
 use graph_from_pbf::{
-    read_settings, write_json_file, Edge, Settings,
+    read_settings, Edge, Settings,
 };
+use connectivity::io::write_json_file;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
