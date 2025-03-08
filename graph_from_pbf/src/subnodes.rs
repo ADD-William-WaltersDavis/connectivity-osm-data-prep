@@ -13,7 +13,7 @@ pub fn process(
     edges: &Vec<Edge>,
     tif_path: &str,
     settings: &Settings,
-    graph_node_lookup: HashMap<i64, (usize, Coord)>,
+    graph_node_lookup: &HashMap<i64, (usize, Coord)>,
 ) -> Vec<SubNode> {
     println!("Getting subnodes");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
@@ -36,7 +36,7 @@ pub fn process(
                     elevation.as_mut().unwrap(),
                     settings.speed,
                     settings.ascention_speed,
-                    &graph_node_lookup,
+                    graph_node_lookup,
                 )
             })
         })
@@ -55,10 +55,9 @@ fn get_traversal_times(
     linestring: &LineString,
     elevation: &mut GeoTiffElevation<BufReader<File>>,
     speed: f32,
-    ascention_speed: f32, // 6 s/m for walking to follow Naismith's rule
-) -> (f32, f32, Vec<ComponentLine>) {
+    ascention_speed: f32,
+) -> (f32, Vec<ComponentLine>) {
     let mut link_forward_traversal_time: f32 = 0.0;
-    let mut link_backward_traversal_time: f32 = 0.0;
     let mut component_lines: Vec<ComponentLine> = Vec::new();
 
     for line in linestring.lines() {
@@ -73,7 +72,6 @@ fn get_traversal_times(
                 // TODO: remove these coordinates from the graph
                 println!("Failed to get height for lon: {}, lat: {}", pt1.x, pt1.y);
                 link_forward_traversal_time += length / speed;
-                link_backward_traversal_time += length / speed;
                 component_lines.push(ComponentLine {
                     line: line,
                     length: length,
@@ -89,7 +87,6 @@ fn get_traversal_times(
             None => {
                 println!("Failed to get height for lon: {}, lat: {}", pt2.x, pt2.y);
                 link_forward_traversal_time += length / speed;
-                link_backward_traversal_time += length / speed;
                 component_lines.push(ComponentLine {
                     line: line,
                     length: length,
@@ -113,7 +110,6 @@ fn get_traversal_times(
                 0.0
             };
         link_forward_traversal_time += forward_traversal_time;
-        link_backward_traversal_time += backward_traversal_time;
         component_lines.push(ComponentLine {
             line: line,
             length: length,
@@ -121,11 +117,7 @@ fn get_traversal_times(
             backward_traversal_time: backward_traversal_time,
         });
     }
-    (
-        link_forward_traversal_time,
-        link_backward_traversal_time,
-        component_lines,
-    )
+    (link_forward_traversal_time, component_lines)
 }
 
 fn get_subnode_coords(fraction_across_line: f64, line: &Line) -> (f64, f64) {
@@ -138,7 +130,6 @@ fn get_subnodes(
     start_node_id: usize,
     end_node_id: usize,
     link_forward_traversal_time: f32,
-    _link_backward_traversal_time: f32, // don't use could remove
     component_lines: Vec<ComponentLine>,
 ) -> Vec<SubNode> {
     let mut subnodes: Vec<SubNode> = Vec::new();
@@ -214,7 +205,7 @@ fn calculate_subnodes(
     ascention_speed: f32,
     graph_node_lookup: &HashMap<i64, (usize, Coord)>,
 ) -> Vec<SubNode> {
-    let (link_forward_traversal_time, link_backward_traversal_time, line_details) =
+    let (link_forward_traversal_time, line_details) =
         get_traversal_times(linestring, elevation, speed, ascention_speed);
 
     let start_node_id = graph_node_lookup[start_node].0;
@@ -224,7 +215,6 @@ fn calculate_subnodes(
         start_node_id,
         end_node_id,
         link_forward_traversal_time,
-        link_backward_traversal_time,
         line_details,
     )
 }
