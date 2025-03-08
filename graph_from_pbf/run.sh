@@ -38,4 +38,5 @@ time cargo run --release \
 	../data \
 	true \
 	../input/pt_route_timetables_2022.json \
-	../input/pt_stop_coordinates_2022.json
+	../input/pt_stop_coordinates_2022.json \
+	false

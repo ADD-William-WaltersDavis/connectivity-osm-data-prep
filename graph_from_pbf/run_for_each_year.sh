@@ -39,8 +39,8 @@ for year in 14 15 16 17 18 19 20 21 22 23 24; do
 		../data/${year} \
 		true \
 		../input/pt_route_timetables_20${year}.json \
-		../input/pt_stop_coordinates_20${year}.json
-
+		../input/pt_stop_coordinates_20${year}.json \
+		false
 
 	time gsutil -m cp -r ../data/${year} gs://${bucket}/graphs/gb
 

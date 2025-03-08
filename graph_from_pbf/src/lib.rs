@@ -1,9 +1,10 @@
 use anyhow::Result;
 use fs_err::File;
 use geo::{Coord, LineString};
+use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::{BufReader, BufWriter, Write};
+use std::io::BufReader;
 
 #[derive(Serialize)]
 pub struct Edge {
@@ -41,6 +42,15 @@ impl Timetable {
     }
 }
 
+pub struct SubNode {
+    pub start_node: usize,
+    pub end_node: usize,
+    pub longitude: f64,
+    pub latitude: f64,
+    pub time_to_start: usize,
+    pub time_to_end: usize,
+}
+
 pub fn read_settings(mode: &str) -> Result<Settings> {
     let inpath = format!("settings/{}.json", mode);
     let file = File::open(inpath)?;
@@ -75,4 +85,45 @@ pub fn read_walk_graph() -> Result<Vec<Vec<(usize, usize, u16, u16, u32)>>> {
     let reader = BufReader::new(file);
     let walk_graph: Vec<Vec<(usize, usize, u16, u16, u32)>> = serde_json::from_reader(reader)?;
     Ok(walk_graph)
+}
+
+pub fn write_subnodes_parquet(
+    network_subnodes: &Vec<SubNode>,
+    output_directory: &str,
+    mode: &str,
+) -> Result<()> {
+    let start_nodes: Vec<u32> = network_subnodes
+        .iter()
+        .map(|x| x.start_node as u32)
+        .collect();
+    let end_nodes: Vec<u32> = network_subnodes.iter().map(|x| x.end_node as u32).collect();
+    let longitudes: Vec<f32> = network_subnodes
+        .iter()
+        .map(|x| x.longitude as f32)
+        .collect();
+    let latitudes: Vec<f32> = network_subnodes.iter().map(|x| x.latitude as f32).collect();
+    let time_to_starts: Vec<u32> = network_subnodes
+        .iter()
+        .map(|x| x.time_to_start as u32)
+        .collect();
+    let time_to_ends: Vec<u32> = network_subnodes
+        .iter()
+        .map(|x| x.time_to_end as u32)
+        .collect();
+
+    let df: PolarsResult<DataFrame> = df!(
+        "start_node" => start_nodes,
+        "end_node" => end_nodes,
+        "longitude" => longitudes,
+        "latitude" => latitudes,
+        "time_to_start" => time_to_starts,
+        "time_to_end" => time_to_ends,
+    );
+    let mut df = df.unwrap();
+    let file = File::create(format!("{output_directory}/{mode}_subnodes.parquet"))
+        .expect("could not create file");
+    ParquetWriter::new(file)
+        .finish(&mut df)
+        .expect("could not save file");
+    Ok(())
 }
