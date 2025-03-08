@@ -6,7 +6,9 @@ use std::io::BufReader;
 use elevation::GeoTiffElevation;
 use fs_err::File;
 use geo::{Coord, HaversineLength, Line, LineString};
+use graph_from_pbf::{SubNode, write_subnodes_parquet};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use anyhow::Result;
 use rayon::prelude::*;
 
 pub fn process(
@@ -14,7 +16,9 @@ pub fn process(
     tif_path: &str,
     settings: &Settings,
     graph_node_lookup: &HashMap<i64, (usize, Coord)>,
-) -> Vec<SubNode> {
+    output_directory: &str,
+    mode: &str,
+) -> Result<()> {
     println!("Getting subnodes");
     let progress = ProgressBar::new(edges.len() as u64).with_style(ProgressStyle::with_template(
         "[{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ({per_sec}, {eta})").unwrap());
@@ -41,7 +45,8 @@ pub fn process(
             })
         })
         .collect();
-    subnodes
+    write_subnodes_parquet(&subnodes, output_directory, mode)?;
+    Ok(())
 }
 
 struct ComponentLine {

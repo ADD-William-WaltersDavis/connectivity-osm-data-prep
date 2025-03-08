@@ -8,7 +8,7 @@ mod traversal_times;
 
 use anyhow::Result;
 use connectivity::io::write_json_file;
-use graph_from_pbf::{read_settings, write_subnodes_parquet, Edge, Settings, SubNode};
+use graph_from_pbf::{read_settings, Edge, Settings};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -47,8 +47,7 @@ fn run(
     let (graph_nodes_lookup, edges) = edges::process(osm_paths, &settings)?;
     let traversal_times = traversal_times::calculate(&edges, tif_path, &settings);
     if subnodes_toggle {
-        let network_subnodes = subnodes::process(&edges, tif_path, &settings, &graph_nodes_lookup);
-        write_subnodes_parquet(&network_subnodes, output_directory, mode)?;
+        subnodes::process(&edges, tif_path, &settings, &graph_nodes_lookup, output_directory, mode)?;
     }
     let angles = angles::calculate(&edges);
     let (graph, nodes) = graph::process(graph_nodes_lookup, traversal_times, angles, edges);
