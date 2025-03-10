@@ -49,7 +49,7 @@ pub fn process(
     Ok(())
 }
 
-struct ComponentLine {
+pub struct ComponentLine {
     line: Line,
     length: f32,
     forward_traversal_time: f32,
@@ -210,13 +210,13 @@ fn calculate_subnodes(
     ascention_speed: f32,
     graph_node_lookup: &HashMap<i64, (usize, Coord)>,
 ) -> Vec<SubNode> {
-    let (link_forward_traversal_time, line_details) =
+    let (link_forward_traversal_time, component_lines) =
         get_traversal_times(linestring, elevation, speed, ascention_speed);
 
     get_subnodes(
         graph_node_lookup[start_node].0,
         graph_node_lookup[end_node].0,
         link_forward_traversal_time,
-        line_details,
+        component_lines,
     )
 }
