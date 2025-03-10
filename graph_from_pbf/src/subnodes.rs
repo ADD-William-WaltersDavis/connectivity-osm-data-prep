@@ -154,17 +154,17 @@ fn get_subnodes(
     });
     for component_line in component_lines.iter() {
         // TODO: adjust this threshold based on the observed accuracy
-        // currently max distance between 7.5m and minumum ~7.5/2 = 3.75m
+        // currently max distance between subnodes 7.5m and minumum ~7.5/2 = 3.75m
         if component_line.length > 7.5 {
-            let n_inner_subnodes = (component_line.length / 5.0).floor() as usize;
+            let inner_subnodes_count = (component_line.length / 5.0).floor() as usize;
 
-            for inner_subnode_index in 1..n_inner_subnodes + 1 {
+            for inner_subnode_n in 1..inner_subnodes_count + 1 {
                 let fraction_across_line =
-                    inner_subnode_index as f32 / (n_inner_subnodes + 1) as f32;
+                    inner_subnode_n as f32 / (inner_subnodes_count + 1) as f32;
 
-                let forward_time_from_subnode =
+                let line_start_to_subnode_time_forward =
                     fraction_across_line * component_line.forward_traversal_time;
-                let backward_time_from_subnode =
+                let line_start_to_subnode_time_backward =
                     fraction_across_line * component_line.backward_traversal_time;
                 let (subnode_x, subnode_y) =
                     get_subnode_coords(fraction_across_line as f64, &component_line.line);
@@ -174,10 +174,10 @@ fn get_subnodes(
                     longitude: subnode_x,
                     latitude: subnode_y,
                     time_to_start: (time_to_component_line_start_backward
-                        + backward_time_from_subnode)
+                        + line_start_to_subnode_time_backward)
                         .round() as usize,
                     time_to_end: (link_forward_traversal_time
-                        - (time_to_component_line_start_forward + forward_time_from_subnode))
+                        - (time_to_component_line_start_forward + line_start_to_subnode_time_forward))
                         .round() as usize,
                 });
             }
@@ -213,12 +213,9 @@ fn calculate_subnodes(
     let (link_forward_traversal_time, line_details) =
         get_traversal_times(linestring, elevation, speed, ascention_speed);
 
-    let start_node_id = graph_node_lookup[start_node].0;
-    let end_node_id = graph_node_lookup[end_node].0;
-
     get_subnodes(
-        start_node_id,
-        end_node_id,
+        graph_node_lookup[start_node].0,
+        graph_node_lookup[end_node].0,
         link_forward_traversal_time,
         line_details,
     )
