@@ -41,7 +41,9 @@ fn scrape_osm(
                 nodes_progress.inc(1);
                 node_mapping.insert(id, Coord { x: lon, y: lat });
             }
-            Element::Way { id, node_ids, tags, .. } => {
+            Element::Way {
+                id, node_ids, tags, ..
+            } => {
                 if tags.contains_key("highway")
                     // select just ways meeting mode criteria
                     && settings.tag_pairs.iter().all(|(k, v)| tags.get(k) != Some(v))
@@ -62,7 +64,7 @@ fn scrape_osm(
         })?;
         ways_progress.finish();
     }
-    
+
     Ok((node_mapping, highways))
 }
 
